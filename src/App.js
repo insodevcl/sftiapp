@@ -21,7 +21,7 @@ function App() {
             {config.loginStatus && config.empresaID && <Navigation />}
             <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/safetiapp" element={<HomePage />} />
+                <Route path="/sftiapp" element={<HomePage />} />
                 <Route path="/config" element={<ConfigPage />} />
                 <Route path="/empresa" element={<EmpresaPage />} />
                 <Route
