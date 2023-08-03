@@ -33,11 +33,11 @@
       "sizes": "16x16"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "id": "cl.sfti.app",
   "theme_color": "#59185E",
-  "background_color": "#c133cd",
+  "background_color": "#ffffff",
   "lang": "es-CL",
   "orientation": "portrait-primary",
   "description": "SFTI App",
