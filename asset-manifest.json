@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/static/css/main.31d6cfe0.css",
-    "main.js": "/static/js/main.ed7af62d.js",
-    "static/js/787.5f23d7d8.chunk.js": "/static/js/787.5f23d7d8.chunk.js",
-    "service-worker.js": "/service-worker.js",
-    "index.html": "/index.html",
-    "main.ed7af62d.js.map": "/static/js/main.ed7af62d.js.map",
-    "787.5f23d7d8.chunk.js.map": "/static/js/787.5f23d7d8.chunk.js.map"
+    "main.css": "/sftiapp/static/css/main.31d6cfe0.css",
+    "main.js": "/sftiapp/static/js/main.193dea94.js",
+    "static/js/787.5f23d7d8.chunk.js": "/sftiapp/static/js/787.5f23d7d8.chunk.js",
+    "service-worker.js": "/sftiapp/service-worker.js",
+    "index.html": "/sftiapp/index.html",
+    "main.193dea94.js.map": "/sftiapp/static/js/main.193dea94.js.map",
+    "787.5f23d7d8.chunk.js.map": "/sftiapp/static/js/787.5f23d7d8.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.31d6cfe0.css",
-    "static/js/main.ed7af62d.js"
+    "static/js/main.193dea94.js"
   ]
 }
