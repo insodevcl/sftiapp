@@ -8,11 +8,11 @@ export const getApiServers = () => {
 
 export const getApiLogin = (server, username, password) => {
   return axios.get(
-    `http://${server}/api/login/?username=${username}&password=${password}`
+    `https://${server}/api/login/?username=${username}&password=${password}`
   );
 };
 
 
 export const getApiData = (server, empresa_id) => {
-    return axios.get(`http://${server}/api/app/data/${empresa_id}/`);
+    return axios.get(`https://${server}/api/app/data/${empresa_id}/`);
 };
