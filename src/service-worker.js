@@ -75,24 +75,24 @@ self.addEventListener("message", (event) => {
 });
 
 // Any other custom service worker logic can go here.
-const jsExtensionRegexp = new RegExp("/[^/?]+\\.(?:js)$");
-registerRoute(
-    ({ url }) =>
-        url.origin === self.location.origin &&
-        url.pathname.match(jsExtensionRegexp),
-    new StaleWhileRevalidate({
-        cacheName: "js",
-        plugins: [new ExpirationPlugin({ maxEntries: 50 })],
-    })
-);
+// const jsExtensionRegexp = new RegExp("/[^/?]+\\.(?:js)$");
+// registerRoute(
+//     ({ url }) =>
+//         url.origin === self.location.origin &&
+//         url.pathname.match(jsExtensionRegexp),
+//     new StaleWhileRevalidate({
+//         cacheName: "js",
+//         plugins: [new ExpirationPlugin({ maxEntries: 50 })],
+//     })
+// );
 
-const jsonExtensionRegexp = new RegExp("/[^/?]+\\.(?:json)$");
-registerRoute(
-    ({ url }) =>
-        url.origin === self.location.origin &&
-        url.pathname.match(jsonExtensionRegexp),
-    new StaleWhileRevalidate({
-        cacheName: "json",
-        plugins: [new ExpirationPlugin({ maxEntries: 50 })],
-    })
-);
+// const jsonExtensionRegexp = new RegExp("/[^/?]+\\.(?:json)$");
+// registerRoute(
+//     ({ url }) =>
+//         url.origin === self.location.origin &&
+//         url.pathname.match(jsonExtensionRegexp),
+//     new StaleWhileRevalidate({
+//         cacheName: "json",
+//         plugins: [new ExpirationPlugin({ maxEntries: 50 })],
+//     })
+// );

@@ -7,18 +7,14 @@ import { HomePage } from "./pages/HomePage";
 import { ListAuditoriaDisponiblePage } from "./pages/ListAuditoriaDisponiblePage";
 import { ListAuditoriaRealizadaPage } from "./pages/ListAuditoriaRealizadaPage";
 import { NewAuditoriaPage } from "./pages/NewAuditoriaPage";
-import { Navigation } from "./components/Navigation";
-import { getStorageConfig } from "./functions/functions";
 
 function App() {
-    const config = getStorageConfig();
     useEffect(() => {
         document.title = "App";
     }, []);
 
     return (
         <BrowserRouter>
-            {config.loginStatus && config.empresaID && <Navigation />}
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/sftiapp" element={<HomePage />} />

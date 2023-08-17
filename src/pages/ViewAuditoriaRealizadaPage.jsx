@@ -106,7 +106,6 @@ export function NewAuditoriaPage() {
         if (nPreguntas !== countRespuestas()) {
             return handleOpenDialog2();
         }
-        data["id"] = new Date().getTime();
         data["fecha"] = new Date().toJSON();
         data["user_id"] = storageConfig.userID;
         data["empresa_id"] = storageConfig.empresaID;

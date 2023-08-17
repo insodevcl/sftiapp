@@ -1,72 +1,97 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { getStorageData, getStorageAuditorias } from "../functions/functions";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+    Box,
+    AppBar,
+    Toolbar,
+    Container,
+    IconButton,
+    Typography,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import AssistantIcon from "@mui/icons-material/Assistant";
+import { AuditoriaRealizadaCard } from "../components/AuditoriaRealizadaCard";
+import {
+    getStorageConfig,
+    getStorageAuditoriasRealizadas,
+} from "../functions/functions";
 
 export function ListAuditoriaRealizadaPage() {
-  const [data, setData] = useState([]);
-  const [auditoriasRealizadas, setAuditoriasRealizadas] = useState([]);
-
-  useEffect(() => {
-    document.title = "Auditorias realizadas";
-    const storageData = getStorageData();
-    setData(storageData);
-    const storageAuditorias = getStorageAuditorias();
-    setAuditoriasRealizadas(storageAuditorias);
-  }, []);
-
-  const renderAuditoriasRealizadas = (auditoriaRealizada) => {
-    const auditoria = data.auditorias.find(
-      (auditoria) => auditoria.id === auditoriaRealizada.auditoria_id
+    const storageConfig = getStorageConfig();
+    const auditoriasRealizadas = getStorageAuditoriasRealizadas(
+        storageConfig.empresaID
     );
-    let subarea = undefined;
-    data.areas.map((area) => {
-      const encontrada = area.subareas.find(
-        (subarea) => subarea.id === auditoriaRealizada.subarea_id
-      );
-      if (encontrada) subarea = encontrada;
-    });
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        document.title = "Auditorias realizadas";
+    }, []);
+
     return (
-      <div key={auditoriaRealizada.id}>
-        <p>
-          {auditoriaRealizada.sync && (
-            <span style={{ color: "green" }}>Sincronizada</span>
-          )}
-          {!auditoriaRealizada.sync && (
-            <span style={{ color: "red" }}>No sincronizada</span>
-          )}
-        </p>
-        <p>
-          <b>Fecha: </b>
-          {auditoriaRealizada.fecha}
-        </p>
-        <p>
-          <b>Nombre: </b>
-          {auditoria.descripcion}
-        </p>
-        <p>
-          <b>Tipo: </b>
-          {auditoria.tipo}
-        </p>
-        <p>
-          <b>Categoría: </b>
-          {!auditoria.categoria ? "No aplica" : null}
-          {auditoria.categoria}
-        </p>
-        <p>
-          <b>Subárea: </b>
-          {subarea.nombre}
-        </p>
-        <Link to={`/auditoria/ver/${auditoriaRealizada.id}`}>Ver</Link>
-      </div>
+        <Box sx={{ flexGrow: 1 }}>
+            <AppBar position="fixed">
+                <Toolbar
+                    variant="dense"
+                    sx={{
+                        bgcolor: "#59185E",
+                    }}
+                >
+                    <IconButton
+                        edge="start"
+                        size="large"
+                        color="inherit"
+                        aria-label="volver"
+                        onClick={() => navigate(-1)}
+                        sx={{ mr: 2 }}
+                    >
+                        <ArrowBackIcon />
+                    </IconButton>
+                    <Typography
+                        variant="h6"
+                        component="div"
+                        sx={{ flexGrow: 1 }}
+                    >
+                        Auditorias realizadas
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "top",
+                    alignItems: "center",
+                    pt: 8,
+                    px: 1,
+                    pb: 2,
+                    bgcolor: "#ecf0f1",
+                    minHeight: "100vh",
+                }}
+            >
+                {auditoriasRealizadas?.length === 0 ? (
+                    <Container
+                        sx={{
+                            textAlign: "center",
+                            pt: 2,
+                        }}
+                    >
+                        <AssistantIcon sx={{ fontSize: 64 }} />
+                        <Typography variant="h6" sx={{ color: "black" }}>
+                            Aún no has realizado ninguna auditoria
+                        </Typography>
+                    </Container>
+                ) : (
+                    <>
+                        {auditoriasRealizadas?.map((auditoriaRealizada) => (
+                            <AuditoriaRealizadaCard
+                                key={auditoriaRealizada.id}
+                                auditoriaRealizada={auditoriaRealizada}
+                            />
+                        ))}
+                    </>
+                )}
+            </Box>
+        </Box>
     );
-  };
-
-  return (
-    <div>
-      <h1>Listado de auditorias realizadas</h1>
-      {auditoriasRealizadas.map((auditoriaRealizada) =>
-        renderAuditoriasRealizadas(auditoriaRealizada)
-      )}
-    </div>
-  );
 }

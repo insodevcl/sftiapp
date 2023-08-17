@@ -15,3 +15,8 @@ export const getApiLogin = (server, username, password) => {
 export const getApiData = (server, empresa_id) => {
     return axios.get(`https://${server}/api/app/data/${empresa_id}/`);
 };
+
+
+export const apiSetAuditoria = (server, data) => {
+    return axios.post(`https://${server}/api/app/auditoria/`, data);
+}
