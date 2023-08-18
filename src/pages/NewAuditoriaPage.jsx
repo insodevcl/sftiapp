@@ -24,6 +24,7 @@ import {
     Alert,
     Divider,
     ButtonGroup,
+    Paper,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -47,7 +48,6 @@ export function NewAuditoriaPage() {
     const navigate = useNavigate();
     const storageConfig = getStorageConfig();
     const storageData = getStorageData();
-    const storageAuditoriasRealizadas = getStorageAuditoriasRealizadas();
     const [nPreguntas, setNPreguntas] = useState(0);
     const {
         register,
@@ -116,10 +116,11 @@ export function NewAuditoriaPage() {
         data["auditoria_id"] = auditoria.id;
         data["sync"] = false;
         console.log("Data", data);
-        storageAuditoriasRealizadas.push(data);
+        const realizadas = JSON.parse(localStorage.getItem("auditorias"));
+        realizadas.push(data);
         localStorage.setItem(
             "auditorias",
-            JSON.stringify(storageAuditoriasRealizadas)
+            JSON.stringify(realizadas)
         );
         toast.success("Auditoría guardada");
         return navigate("/");
@@ -362,7 +363,6 @@ export function NewAuditoriaPage() {
                 <InputLabel id="id_label_operador">Operador</InputLabel>
                 <Select
                     labelId="id_label_operador"
-                    label="Operador"
                     name="operador"
                     fullWidth
                     defaultValue={""}
@@ -418,7 +418,7 @@ export function NewAuditoriaPage() {
                 ></TextField>
                 <Divider
                     variant="fullWidth"
-                    sx={{ borderColor: "#e0e0e0", width: "100%" }}
+                    sx={{ borderColor: "text.primary", width: "100%" }}
                 />
             </Container>
         );
@@ -430,7 +430,7 @@ export function NewAuditoriaPage() {
                 <Toolbar
                     variant="dense"
                     sx={{
-                        bgcolor: "#59185E",
+                        bgcolor: "background.primary",
                     }}
                 >
                     <IconButton
@@ -508,15 +508,16 @@ export function NewAuditoriaPage() {
                     pt: 8,
                     px: 2,
                     pb: 2,
-                    bgcolor: "#ecf0f1",
+                    bgcolor: "background.main",
                 }}
             >
                 <form onSubmit={onSubmit} style={{ width: "100%" }}>
-                    <Container
+                    <Paper
+                        elevation={3}
                         sx={{
-                            mb: 2,
                             bgcolor: "white",
-                            borderRadius: 2,
+                            mb: 2,
+                            p: 1,
                         }}
                     >
                         {auditoria.tipo_id === 2 &&
@@ -527,7 +528,6 @@ export function NewAuditoriaPage() {
                                     </InputLabel>
                                     <Select
                                         labelId="id_label_trabajador"
-                                        label="Trabajador"
                                         name="trabajador"
                                         fullWidth
                                         defaultValue={""}
@@ -565,7 +565,6 @@ export function NewAuditoriaPage() {
                                     </InputLabel>
                                     <Select
                                         labelId="id_label_maquinaria"
-                                        label="Maquinaria"
                                         name="maquinaria"
                                         fullWidth
                                         defaultValue={""}
@@ -597,7 +596,6 @@ export function NewAuditoriaPage() {
                                     </InputLabel>
                                     <Select
                                         labelId="id_label_herramienta"
-                                        label="Herramienta"
                                         name="herramienta"
                                         fullWidth
                                         defaultValue={""}
@@ -629,7 +627,6 @@ export function NewAuditoriaPage() {
                                     </InputLabel>
                                     <Select
                                         labelId="id_label_equipo"
-                                        label="Equipo"
                                         name="equipo"
                                         fullWidth
                                         defaultValue={""}
@@ -661,7 +658,6 @@ export function NewAuditoriaPage() {
                                     </InputLabel>
                                     <Select
                                         labelId="id_label_instalacion"
-                                        label="Instalación"
                                         name="instalacion"
                                         fullWidth
                                         defaultValue={""}
@@ -699,7 +695,6 @@ export function NewAuditoriaPage() {
                                     </InputLabel>
                                     <Select
                                         labelId="id_label_transporte"
-                                        label="Transporte"
                                         name="transporte"
                                         fullWidth
                                         defaultValue={""}
@@ -731,7 +726,6 @@ export function NewAuditoriaPage() {
                                     </InputLabel>
                                     <Select
                                         labelId="id_label_equipo_emergencia"
-                                        label="Equipo de emergencia"
                                         name="equipo_emergencia"
                                         fullWidth
                                         defaultValue={""}
@@ -764,7 +758,6 @@ export function NewAuditoriaPage() {
                                 </InputLabel>
                                 <Select
                                     labelId="id_label_sucursal"
-                                    label="Sucursal"
                                     name="sucursal"
                                     fullWidth
                                     defaultValue={""}
@@ -799,7 +792,6 @@ export function NewAuditoriaPage() {
                                 </InputLabel>
                                 <Select
                                     labelId="id_label_faena"
-                                    label="Faena"
                                     name="faena"
                                     fullWidth
                                     defaultValue={""}
@@ -834,7 +826,6 @@ export function NewAuditoriaPage() {
                                 </InputLabel>
                                 <Select
                                     labelId="id_label_contratista"
-                                    label="Contratista"
                                     name="contratista"
                                     fullWidth
                                     defaultValue={""}
@@ -867,7 +858,6 @@ export function NewAuditoriaPage() {
                                 </InputLabel>
                                 <Select
                                     labelId="id_label_sucursal"
-                                    label="Sucursal"
                                     name="sucursal"
                                     fullWidth
                                     defaultValue={""}
@@ -891,7 +881,6 @@ export function NewAuditoriaPage() {
                                 </InputLabel>
                                 <Select
                                     labelId="id_label_faena"
-                                    label="Faena"
                                     name="faena"
                                     fullWidth
                                     defaultValue={""}
@@ -915,7 +904,6 @@ export function NewAuditoriaPage() {
                         <InputLabel id="id_label_subarea">Subárea</InputLabel>
                         <Select
                             labelId="id_label_subarea"
-                            label="Subárea"
                             name="subarea"
                             fullWidth
                             defaultValue={""}
@@ -939,7 +927,6 @@ export function NewAuditoriaPage() {
                         </InputLabel>
                         <Select
                             labelId="id_label_lugar"
-                            label="Lugar"
                             name="lugar"
                             fullWidth
                             defaultValue={""}
@@ -953,23 +940,22 @@ export function NewAuditoriaPage() {
                                 </MenuItem>
                             ))}
                         </Select> */}
-                    </Container>
+                    </Paper>
                     {auditoria?.grupos?.map((grupo) => (
-                        <Box
+                        <Paper
                             key={grupo.id}
                             sx={{
-                                mb: 2,
                                 bgcolor: "white",
-                                borderRadius: 2,
+                                mb: 2,
                             }}
                         >
                             <Container
                                 sx={{
                                     textAlign: "center",
                                     p: 2,
-                                    bgcolor: "#59185E",
-                                    borderTopLeftRadius: 8,
-                                    borderTopRightRadius: 8,
+                                    bgcolor: "background.primary",
+                                    borderTopLeftRadius: 4,
+                                    borderTopRightRadius: 4,
                                 }}
                             >
                                 <Typography
@@ -987,22 +973,22 @@ export function NewAuditoriaPage() {
                                     key={pregunta.id}
                                 />
                             ))}
-                        </Box>
+                        </Paper>
                     ))}
-                    <Box
+                    <Paper
+                        elevation={3}
                         sx={{
-                            mb: 2,
                             bgcolor: "white",
-                            borderRadius: 2,
+                            mb: 2,
                         }}
                     >
                         <Container
                             sx={{
                                 textAlign: "center",
                                 p: 2,
-                                bgcolor: "#59185E",
-                                borderTopLeftRadius: 8,
-                                borderTopRightRadius: 8,
+                                bgcolor: "background.primary",
+                                borderTopLeftRadius: 4,
+                                borderTopRightRadius: 4,
                             }}
                         >
                             <Typography
@@ -1026,25 +1012,21 @@ export function NewAuditoriaPage() {
                                 {...register("observacion")}
                             ></TextField>
                         </Container>
-                    </Box>
-                    <Box
+                    </Paper>
+                    <Paper
+                        elevation={3}
                         sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "top",
-                            alignItems: "start",
-                            mb: 2,
                             bgcolor: "white",
-                            borderRadius: 2,
+                            mb: 2,
                         }}
                     >
                         <Container
                             sx={{
                                 textAlign: "center",
                                 p: 2,
-                                bgcolor: "#59185E",
-                                borderTopLeftRadius: 8,
-                                borderTopRightRadius: 8,
+                                bgcolor: "background.primary",
+                                borderTopLeftRadius: 4,
+                                borderTopRightRadius: 4,
                             }}
                         >
                             <Typography
@@ -1077,25 +1059,21 @@ export function NewAuditoriaPage() {
                                 )}
                             </>
                         )}
-                    </Box>
-                    <Box
+                    </Paper>
+                    <Paper
+                        elevation={3}
                         sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "top",
-                            alignItems: "start",
-                            mb: 2,
                             bgcolor: "white",
-                            borderRadius: 2,
+                            mb: 2,
                         }}
                     >
                         <Container
                             sx={{
                                 textAlign: "center",
                                 p: 2,
-                                bgcolor: "#59185E",
-                                borderTopLeftRadius: 8,
-                                borderTopRightRadius: 8,
+                                bgcolor: "background.primary",
+                                borderTopLeftRadius: 4,
+                                borderTopRightRadius: 4,
                             }}
                         >
                             <Typography
@@ -1133,7 +1111,7 @@ export function NewAuditoriaPage() {
                                 ))}
                             </>
                         )}
-                    </Box>
+                    </Paper>
                     <Divider
                         sx={{
                             mb: 2,
@@ -1148,14 +1126,13 @@ export function NewAuditoriaPage() {
                     >
                         <ButtonGroup
                             variant="contained"
-                            color="secondary"
+                            color="light"
                             aria-label="contained primary button group"
                             fullWidth
                             sx={{ mb: 2 }}
                         >
                             <Button
                                 type="button"
-                                variant="contained"
                                 alt="Cancelar"
                                 color="error"
                                 startIcon={<CancelIcon />}
@@ -1165,7 +1142,6 @@ export function NewAuditoriaPage() {
                             </Button>
                             <Button
                                 type="submit"
-                                variant="contained"
                                 alt="Guardar"
                                 color="success"
                                 endIcon={<SaveIcon />}

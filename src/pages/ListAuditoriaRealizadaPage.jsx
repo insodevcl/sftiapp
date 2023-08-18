@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Box,
     AppBar,
     Toolbar,
-    Container,
+    Paper,
     IconButton,
     Typography,
 } from "@mui/material";
@@ -18,15 +18,21 @@ import {
 
 export function ListAuditoriaRealizadaPage() {
     const storageConfig = getStorageConfig();
-    const auditoriasRealizadas = getStorageAuditoriasRealizadas(
-        storageConfig.empresaID
-    );
+    const [auditoriasRealizadas, setAuditoriasRealizadas] = useState([]);
 
     const navigate = useNavigate();
 
     useEffect(() => {
         document.title = "Auditorias realizadas";
+        setAuditoriasRealizadas(getStorageAuditoriasRealizadas(storageConfig.empresaID));
     }, []);
+
+    useEffect(() => {
+        localStorage.setItem(
+            "auditorias",
+            JSON.stringify(auditoriasRealizadas)
+        );
+    }, [auditoriasRealizadas])
 
     return (
         <Box sx={{ flexGrow: 1 }}>
@@ -34,7 +40,7 @@ export function ListAuditoriaRealizadaPage() {
                 <Toolbar
                     variant="dense"
                     sx={{
-                        bgcolor: "#59185E",
+                        bgcolor: "background.primary",
                     }}
                 >
                     <IconButton
@@ -65,28 +71,30 @@ export function ListAuditoriaRealizadaPage() {
                     pt: 8,
                     px: 1,
                     pb: 2,
-                    bgcolor: "#ecf0f1",
+                    bgcolor: "background.main",
                     minHeight: "100vh",
                 }}
             >
-                {auditoriasRealizadas?.length === 0 ? (
-                    <Container
+                {auditoriasRealizadas.length === 0 ? (
+                    <Paper
+                        elevation={3}
                         sx={{
                             textAlign: "center",
-                            pt: 2,
+                            p: 2,
                         }}
                     >
                         <AssistantIcon sx={{ fontSize: 64 }} />
                         <Typography variant="h6" sx={{ color: "black" }}>
                             Aún no has realizado ninguna auditoria
                         </Typography>
-                    </Container>
+                    </Paper>
                 ) : (
                     <>
-                        {auditoriasRealizadas?.map((auditoriaRealizada) => (
+                        {auditoriasRealizadas.map((auditoriaRealizada) => (
                             <AuditoriaRealizadaCard
                                 key={auditoriaRealizada.id}
                                 auditoriaRealizada={auditoriaRealizada}
+                                setAuditoriasRealizadas={setAuditoriasRealizadas}
                             />
                         ))}
                     </>

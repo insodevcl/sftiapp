@@ -417,7 +417,7 @@ export function NewAuditoriaPage() {
                 ></TextField>
                 <Divider
                     variant="fullWidth"
-                    sx={{ borderColor: "#e0e0e0", width: "100%" }}
+                    sx={{ borderColor: "text.primary", width: "100%" }}
                 />
             </Container>
         );
@@ -429,7 +429,7 @@ export function NewAuditoriaPage() {
                 <Toolbar
                     variant="dense"
                     sx={{
-                        bgcolor: "#59185E",
+                        bgcolor: "background.primary",
                     }}
                 >
                     <IconButton
@@ -507,7 +507,7 @@ export function NewAuditoriaPage() {
                     pt: 8,
                     px: 2,
                     pb: 2,
-                    bgcolor: "#ecf0f1",
+                    bgcolor: "background.main",
                 }}
             >
                 <form onSubmit={onSubmit} style={{ width: "100%" }}>
@@ -966,7 +966,7 @@ export function NewAuditoriaPage() {
                                 sx={{
                                     textAlign: "center",
                                     p: 2,
-                                    bgcolor: "#59185E",
+                                    bgcolor: "background.primary",
                                     borderTopLeftRadius: 8,
                                     borderTopRightRadius: 8,
                                 }}
@@ -999,7 +999,7 @@ export function NewAuditoriaPage() {
                             sx={{
                                 textAlign: "center",
                                 p: 2,
-                                bgcolor: "#59185E",
+                                bgcolor: "background.primary",
                                 borderTopLeftRadius: 8,
                                 borderTopRightRadius: 8,
                             }}
@@ -1041,7 +1041,7 @@ export function NewAuditoriaPage() {
                             sx={{
                                 textAlign: "center",
                                 p: 2,
-                                bgcolor: "#59185E",
+                                bgcolor: "background.primary",
                                 borderTopLeftRadius: 8,
                                 borderTopRightRadius: 8,
                             }}
@@ -1092,7 +1092,7 @@ export function NewAuditoriaPage() {
                             sx={{
                                 textAlign: "center",
                                 p: 2,
-                                bgcolor: "#59185E",
+                                bgcolor: "background.primary",
                                 borderTopLeftRadius: 8,
                                 borderTopRightRadius: 8,
                             }}

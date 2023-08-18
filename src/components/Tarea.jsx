@@ -90,7 +90,6 @@ export function Tarea({ tarea, updateTareas, getReference }) {
             <InputLabel id="id_label_supervisor">Supervisor</InputLabel>
             <Select
                 labelId="id_label_supervisor"
-                label="Supervisor"
                 name="supervisor"
                 required
                 fullWidth
@@ -109,7 +108,6 @@ export function Tarea({ tarea, updateTareas, getReference }) {
             <InputLabel id="id_label_responsable">Responsable</InputLabel>
             <Select
                 labelId="id_label_responsable"
-                label="Responsable"
                 name="responsable"
                 required
                 fullWidth
@@ -128,7 +126,6 @@ export function Tarea({ tarea, updateTareas, getReference }) {
             <InputLabel id="id_label_criticidad">Criticidad</InputLabel>
             <Select
                 labelId="id_label_criticidad"
-                label="Criticidad"
                 name="criticidad"
                 required
                 fullWidth

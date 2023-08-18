@@ -11,7 +11,7 @@ import { clientsClaim } from "workbox-core";
 import { ExpirationPlugin } from "workbox-expiration";
 import { precacheAndRoute, createHandlerBoundToURL } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
-import { StaleWhileRevalidate } from "workbox-strategies";
+import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 
 clientsClaim();
 
@@ -76,23 +76,12 @@ self.addEventListener("message", (event) => {
 
 // Any other custom service worker logic can go here.
 // const jsExtensionRegexp = new RegExp("/[^/?]+\\.(?:js)$");
-// registerRoute(
-//     ({ url }) =>
-//         url.origin === self.location.origin &&
-//         url.pathname.match(jsExtensionRegexp),
-//     new StaleWhileRevalidate({
-//         cacheName: "js",
-//         plugins: [new ExpirationPlugin({ maxEntries: 50 })],
-//     })
-// );
-
-// const jsonExtensionRegexp = new RegExp("/[^/?]+\\.(?:json)$");
-// registerRoute(
-//     ({ url }) =>
-//         url.origin === self.location.origin &&
-//         url.pathname.match(jsonExtensionRegexp),
-//     new StaleWhileRevalidate({
-//         cacheName: "json",
-//         plugins: [new ExpirationPlugin({ maxEntries: 50 })],
-//     })
-// );
+registerRoute(
+    ({ url }) =>
+        url.origin === self.location.origin &&
+        url.pathname.match(jsExtensionRegexp),
+    new NetworkFirst({
+        cacheName: "js",
+        plugins: [new ExpirationPlugin({ maxEntries: 50 })],
+    })
+);

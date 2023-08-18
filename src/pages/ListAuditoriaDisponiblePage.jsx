@@ -7,6 +7,7 @@ import {
     IconButton,
     Typography,
     Container,
+    Paper,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AssistantIcon from "@mui/icons-material/Assistant";
@@ -27,7 +28,7 @@ export function ListAuditoriaDisponiblePage() {
                 <Toolbar
                     variant="dense"
                     sx={{
-                        bgcolor: "#59185E",
+                        bgcolor: "background.primary",
                     }}
                 >
                     <IconButton
@@ -58,21 +59,22 @@ export function ListAuditoriaDisponiblePage() {
                     pt: 8,
                     px: 1,
                     pb: 2,
-                    bgcolor: "#ecf0f1",
+                    bgcolor: "background.main",
                 }}
             >
                 {storageData?.auditorias.length === 0 ? (
-                    <Container
+                    <Paper
+                        elevation={3}
                         sx={{
                             textAlign: "center",
-                            pt: 2,
+                            p: 2,
                         }}
                     >
                         <AssistantIcon sx={{ fontSize: 64 }} />
                         <Typography variant="h6" sx={{ color: "black" }}>
                             No se encontraron auditorias disponibles
                         </Typography>
-                    </Container>
+                    </Paper>
                 ) : (
                     <>
                         {storageData?.auditorias.map((auditoria) => (

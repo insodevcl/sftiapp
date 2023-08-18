@@ -14,8 +14,6 @@ import {
     Button,
     IconButton,
     Alert,
-    Typography,
-    Container,
 } from "@mui/material";
 import DnsIcon from "@mui/icons-material/Dns";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -113,8 +111,6 @@ export function ConfigPage() {
                 <Select
                     labelId="id_label_server"
                     fullWidth
-                    variant="outlined"
-                    label="Servidor"
                     defaultValue={""}
                     displayEmpty
                     renderValue={(value) => {
@@ -134,7 +130,7 @@ export function ConfigPage() {
                     sx={{
                         mb: 2,
                         background: "white",
-                        color: "black",
+                        color: "text.secondary"
                     }}
                     {...register("server", { required: true })}
                 >
@@ -163,7 +159,7 @@ export function ConfigPage() {
                     sx={{
                         mb: 2,
                         background: "white",
-                        color: "black",
+                        color: "text.secondary",
                     }}
                     {...register("username", { required: true })}
                 />
@@ -200,7 +196,7 @@ export function ConfigPage() {
                     sx={{
                         mb: 2,
                         background: "white",
-                        color: "black",
+                        color: "text.secondary",
                     }}
                     {...register("password", { required: true })}
                 />
@@ -217,11 +213,11 @@ export function ConfigPage() {
                         bgcolor: "white",
                         color: "black",
                         hover: {
-                            bgcolor: "#59185E",
+                            bgcolor: "primary.main",
                             color: "white",
                         },
                         active: {
-                            bgcolor: "#59185E",
+                            bgcolor: "primary.main",
                             color: "white",
                         },
                     }}
@@ -231,7 +227,7 @@ export function ConfigPage() {
             </form>
             <Backdrop
                 sx={{
-                    color: "#fff",
+                    color: "white",
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
                 open={open}

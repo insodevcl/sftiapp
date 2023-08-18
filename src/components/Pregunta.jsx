@@ -54,35 +54,31 @@ export function Pregunta({ pregunta, handleOption }) {
                         fullWidth
                         value={valor}
                         onChange={handleValor}
-                        sx={{ mb: 2 }}
+                        sx={{ my: 2 }}
                     >
                         <ToggleButton
                             value={1}
-                            variant="contained"
                             color="success"
                         >
-                            Si
+                            Cumple
                         </ToggleButton>
                         <ToggleButton
                             value={2}
-                            variant="contained"
                             color="error"
                         >
-                            No
+                            No cumple
                         </ToggleButton>
                         <ToggleButton
                             value={3}
-                            variant="contained"
                             color="warning"
                         >
-                            NC
+                            Corrección
                         </ToggleButton>
                         <ToggleButton
                             value={0}
-                            variant="contained"
-                            color="info"
+                            color="light"
                         >
-                            NA
+                            N/A
                         </ToggleButton>
                     </ToggleButtonGroup>
                     <Divider

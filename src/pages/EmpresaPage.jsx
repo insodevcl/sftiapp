@@ -77,15 +77,17 @@ export function EmpresaPage() {
                                 src={empresa.logo}
                                 onClick={handleSubmit}
                                 sx={{
-                                    width: 48,
-                                    height: 48,
+                                    width: 64,
+                                    height: 64,
                                     bgcolor: "white",
                                     color: "black",
                                     cursor: "pointer",
                                 }}
-                                style={{
-                                    objectFit: "contain",
-                                    padding: "2px",
+                                imgProps={{
+                                    style: {
+                                        objectFit: "contain",
+                                        width: "95%",
+                                    },
                                 }}
                             >
                                 {`${empresa.nombre.split(" ")[0][0]}`}{" "}

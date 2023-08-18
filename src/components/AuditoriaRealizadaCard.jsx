@@ -25,13 +25,17 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { getStorageConfig, getStorageData } from "../functions/functions";
 import { apiSetAuditoria } from "../functions/api";
 
-export function AuditoriaRealizadaCard({ auditoriaRealizada }) {
+export function AuditoriaRealizadaCard({
+    auditoriaRealizada,
+    setAuditoriasRealizadas,
+}) {
     const storageConfig = getStorageConfig();
     const storageData = getStorageData();
     const [auditoria, setAuditoria] = useState(undefined);
     const [subarea, setSubarea] = useState(undefined);
     const [openDialog, setOpenDialog] = useState(false);
     const [sync, setSync] = useState(false);
+    const [syncing, setSyncing] = useState(false);
     const [nPreguntas, setNPreguntas] = useState(0);
     const [nRespuestasSi, setNRespuestasSi] = useState(0);
     const [nRespuestasNo, setNRespuestasNo] = useState(0);
@@ -39,6 +43,7 @@ export function AuditoriaRealizadaCard({ auditoriaRealizada }) {
     const [nRespuestasNA, setNRespuestasNA] = useState(0);
 
     useEffect(() => {
+        setSync(auditoriaRealizada.sync);
         const auditoria = storageData.auditorias.find(
             (x) => x.id === auditoriaRealizada.auditoria_id
         );
@@ -54,13 +59,20 @@ export function AuditoriaRealizadaCard({ auditoriaRealizada }) {
         // const realizador = storageData.usuarios.find(
         //     (x) => x.id === auditoriaRealizada.realizador_id
         // );
-        setSync(auditoriaRealizada.sync);
+        if (navigator.onLine) {
+            if (!auditoriaRealizada.sync) {
+                syncAuditoria();
+            }
+        }
+    }, []);
+
+    useEffect(() => {
         countPreguntas();
         countRespuestasSi();
         countRespuestasNo();
         countRespuestasNC();
         countRespuestasNA();
-    }, []);
+    }, [auditoria, subarea]);
 
     const countPreguntas = () => {
         let n = 0;
@@ -111,20 +123,28 @@ export function AuditoriaRealizadaCard({ auditoriaRealizada }) {
     };
 
     const syncAuditoria = () => {
+        setSyncing(true);
         apiSetAuditoria(storageConfig.server, auditoriaRealizada)
             .then((response) => {
                 if (response.status === 200) {
                     setSync(true);
                 }
+                setSyncing(false);
             })
             .catch((error) => {
                 console.log(error);
-                toast.error(`Error al sincronizar auditoria ${error}`);
+                toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${error}`);
+                setSyncing(false);
             });
     };
 
     const deleteAuditoriaRealizada = (id) => {
         console.log("delete: " + id);
+        const realizadas = JSON.parse(localStorage.getItem("auditorias"));
+        const index = realizadas.findIndex((x) => x.id === id);
+        realizadas.splice(index, 1);
+        localStorage.setItem("auditorias", JSON.stringify(realizadas));
+        setAuditoriasRealizadas(realizadas);
         handleCloseDialog();
     };
 
@@ -194,7 +214,7 @@ export function AuditoriaRealizadaCard({ auditoriaRealizada }) {
 
     return (
         <>
-            {auditoria && subarea && nPreguntas > 0 ? (
+            {auditoria && subarea ? (
                 <>
                     <Dialog
                         open={openDialog}
@@ -223,7 +243,13 @@ export function AuditoriaRealizadaCard({ auditoriaRealizada }) {
                             <Button onClick={handleCloseDialog}>
                                 Cancelar
                             </Button>
-                            <Button onClick={() => deleteAuditoriaRealizada(auditoriaRealizada.id)}>
+                            <Button
+                                onClick={() =>
+                                    deleteAuditoriaRealizada(
+                                        auditoriaRealizada.id
+                                    )
+                                }
+                            >
                                 Continuar
                             </Button>
                         </DialogActions>
@@ -248,7 +274,7 @@ export function AuditoriaRealizadaCard({ auditoriaRealizada }) {
                                 color="text.secondary"
                                 sx={{ mb: 1 }}
                             >
-                                <b>Nombre: </b>
+                                <b>Descripción: </b>
                                 {auditoria.descripcion}
                             </Typography>
                             <Typography
@@ -307,6 +333,12 @@ export function AuditoriaRealizadaCard({ auditoriaRealizada }) {
                                     maxValue={nPreguntas - nRespuestasNA}
                                     color="warning"
                                 />
+                                <CircularProgressWithLabel
+                                    label="N/A"
+                                    value={nRespuestasNA}
+                                    maxValue={nPreguntas}
+                                    color="info"
+                                />
                             </Stack>
                         </CardContent>
                         <CardActions
@@ -327,26 +359,32 @@ export function AuditoriaRealizadaCard({ auditoriaRealizada }) {
                                     Eliminar
                                 </Button>
                             )}
-                            {sync ? (
-                                <Button
-                                    size="small"
-                                    variant="contained"
-                                    disabled={true}
-                                    color="success"
-                                >
-                                    <CloudDoneIcon />
-                                </Button>
+                            {syncing ? (
+                                <CircularProgress size={24} />
                             ) : (
-                                <Button
-                                    size="small"
-                                    variant="contained"
-                                    color="warning"
-                                    alt="Sincronizar"
-                                    startIcon={<CloudSyncIcon />}
-                                    onClick={syncAuditoria}
-                                >
-                                    Sincronizar
-                                </Button>
+                                <>
+                                    {sync ? (
+                                        <Button
+                                            size="small"
+                                            variant="contained"
+                                            disabled={true}
+                                            color="success"
+                                        >
+                                            <CloudDoneIcon />
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            size="small"
+                                            variant="contained"
+                                            color="warning"
+                                            alt="Sincronizar"
+                                            startIcon={<CloudSyncIcon />}
+                                            onClick={syncAuditoria}
+                                        >
+                                            Sincronizar
+                                        </Button>
+                                    )}
+                                </>
                             )}
                             <Link
                                 to={`/auditoria/ver/${auditoriaRealizada.id}`}
@@ -367,7 +405,9 @@ export function AuditoriaRealizadaCard({ auditoriaRealizada }) {
                     </Card>
                 </>
             ) : (
-                <></>
+                <>
+                    <p>Cargando...</p>
+                </>
             )}
         </>
     );

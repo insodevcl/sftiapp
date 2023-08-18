@@ -62,3 +62,10 @@ export const getStorageAuditoriasRealizadas = (empresaID) => {
         return auditorias;
     }
 };
+
+export const goToTop = () => {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+    });
+}
