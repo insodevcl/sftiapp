@@ -75,7 +75,7 @@ self.addEventListener("message", (event) => {
 });
 
 // Any other custom service worker logic can go here.
-// const jsExtensionRegexp = new RegExp("/[^/?]+\\.(?:js)$");
+const jsExtensionRegexp = new RegExp("/[^/?]+\\.(?:js)$");
 registerRoute(
     ({ url }) =>
         url.origin === self.location.origin &&
