@@ -6,12 +6,13 @@ import {
     InputLabel,
     Select,
     MenuItem,
+    Autocomplete,
 } from "@mui/material";
 import { getStorageData } from "../functions/functions";
 
-export function Tarea({ tarea, updateTareas, getReference }) {
+export function Tarea({ tarea, updateTareas, getPregunta }) {
     const id = tarea.id;
-    const descripcionForm = `NO CUMPLE: ${getReference(id)}`;
+    const descripcionForm = `NO CUMPLE: ${getPregunta(id)}`;
     const [tareaForm, setTareaForm] = useState("");
     const [supervisorForm, setSupervisorForm] = useState("");
     const [responsableForm, setResponsableForm] = useState("");
@@ -28,18 +29,32 @@ export function Tarea({ tarea, updateTareas, getReference }) {
             criticidadForm,
             fechaCierreForm
         );
-    }, [tareaForm, supervisorForm, responsableForm, criticidadForm, fechaCierreForm]);
+    }, [
+        tareaForm,
+        supervisorForm,
+        responsableForm,
+        criticidadForm,
+        fechaCierreForm,
+    ]);
 
     const handleTarea = (event) => {
         setTareaForm(event.target.value);
     };
 
-    const handleSupervisor = (event) => {
-        setSupervisorForm(event.target.value);
+    const handleSupervisor = (event, value) => {
+        if (value) {
+            setSupervisorForm(value.id);
+        } else {
+            setSupervisorForm("");
+        }
     };
 
-    const handleResponsable = (event) => {
-        setResponsableForm(event.target.value);
+    const handleResponsable = (event, value) => {
+        if (value) {
+            setResponsableForm(value.id);
+        } else {
+            setResponsableForm("");
+        }
     };
 
     const handleCriticidad = (event) => {
@@ -57,9 +72,8 @@ export function Tarea({ tarea, updateTareas, getReference }) {
             key={tarea.id}
             data-id={tarea.id}
             sx={{
-                mb: 2,
                 p: 2,
-                bgcolor: "white",
+                backgroundColor: "white",
                 borderRadius: 2,
             }}
         >
@@ -72,8 +86,10 @@ export function Tarea({ tarea, updateTareas, getReference }) {
                 fullWidth
                 value={tareaForm}
                 onChange={handleTarea}
+                sx={{
+                    mb: 2,
+                }}
             ></TextField>
-            <Divider sx={{ mb: 2 }} />
             <TextField
                 label="Descripción"
                 name="descripcion"
@@ -85,44 +101,79 @@ export function Tarea({ tarea, updateTareas, getReference }) {
                 inputProps={{
                     readOnly: true,
                 }}
+                sx={{
+                    mb: 2,
+                }}
             ></TextField>
-            <Divider sx={{ mb: 2 }} />
             <InputLabel id="id_label_supervisor">Supervisor</InputLabel>
-            <Select
+            <Autocomplete
                 labelId="id_label_supervisor"
                 name="supervisor"
-                required
                 fullWidth
-                defaultValue={""}
-                value={supervisorForm}
+                defaultValue={null}
+                value={
+                    storageData.supervisores.find(
+                        (supervisor) => supervisor.id === supervisorForm
+                    ) || null
+                }
                 onChange={handleSupervisor}
-            >
-                <MenuItem value="">Seleccione un supervisor</MenuItem>
-                {storageData.supervisores.map((supervisor) => (
-                    <MenuItem value={supervisor.id} key={supervisor.id}>
-                        {supervisor.nombre}
-                    </MenuItem>
-                ))}
-            </Select>
-            <Divider sx={{ mb: 2 }} />
+                options={storageData.supervisores}
+                getOptionLabel={(option) => option.nombre}
+                renderOption={(props, option) => (
+                    <li
+                        {...props}
+                        key={option.id}
+                        style={{ borderBottom: "1px solid #e0e0e0" }}
+                    >
+                        {option.nombre}
+                    </li>
+                )}
+                renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        label="Seleccione un supervisor"
+                        required
+                    />
+                )}
+                sx={{
+                    mb: 2,
+                }}
+            />
             <InputLabel id="id_label_responsable">Responsable</InputLabel>
-            <Select
+            <Autocomplete
                 labelId="id_label_responsable"
                 name="responsable"
-                required
                 fullWidth
-                defaultValue={""}
-                value={responsableForm}
+                defaultValue={null}
+                value={
+                    storageData.responsables.find(
+                        (responsable) => responsable.id === responsableForm
+                    ) || null
+                }
                 onChange={handleResponsable}
-            >
-                <MenuItem value="">Seleccione un responsable</MenuItem>
-                {storageData.responsables.map((responsable) => (
-                    <MenuItem value={responsable.id} key={responsable.id}>
-                        {responsable.nombre}
-                    </MenuItem>
-                ))}
-            </Select>
-            <Divider sx={{ mb: 2 }} />
+                options={storageData.responsables}
+                getOptionLabel={(option) => option.nombre}
+                renderOption={(props, option) => (
+                    <li
+                        {...props}
+                        key={option.id}
+                        style={{ borderBottom: "1px solid #e0e0e0" }}
+                    >
+                        {option.nombre}
+                    </li>
+                )}
+                renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        variant="outlined"
+                        label="Seleccione un responsable"
+                        required
+                    />
+                )}
+                sx={{
+                    mb: 2,
+                }}
+            />
             <InputLabel id="id_label_criticidad">Criticidad</InputLabel>
             <Select
                 labelId="id_label_criticidad"
@@ -132,15 +183,24 @@ export function Tarea({ tarea, updateTareas, getReference }) {
                 defaultValue={""}
                 value={criticidadForm}
                 onChange={handleCriticidad}
+                sx={{
+                    mb: 2,
+                }}
             >
                 <MenuItem value="">Seleccione una criticidad</MenuItem>
                 {storageData.todo_criticidad.map((criticidad) => (
-                    <MenuItem value={criticidad.id} key={criticidad.id}>
+                    <MenuItem
+                        value={criticidad.id}
+                        key={criticidad.id}
+                        divider={true}
+                        sx={{
+                            whiteSpace: "normal",
+                        }}
+                    >
                         {criticidad.nivel}
                     </MenuItem>
                 ))}
             </Select>
-            <Divider sx={{ mb: 2 }} />
             <TextField
                 label="Fecha de cierre"
                 name="fecha_cierre"
@@ -149,12 +209,11 @@ export function Tarea({ tarea, updateTareas, getReference }) {
                 fullWidth
                 value={fechaCierreForm}
                 onChange={handleFechaCierre}
+                sx={{
+                    mb: 2,
+                }}
             ></TextField>
-            <Divider sx={{ mb: 2 }} />
-            <Divider
-                variant="fullwidth"
-                sx={{ borderColor: "#e0e0e0", width: "100%" }}
-            />
+            <Divider />
         </Container>
     );
 }

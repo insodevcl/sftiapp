@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
     Box,
     AppBar,
@@ -41,7 +42,7 @@ import {
     getStorageConfig,
     getStorageData,
 } from "../functions/functions";
-import { getApiData } from "../functions/api";
+import { apiData } from "../functions/api";
 
 export function HomePage() {
     const [dataState, setDataState] = useState({});
@@ -66,19 +67,9 @@ export function HomePage() {
         initStorage();
         if (!configData.loginStatus) return navigate("/config");
         if (!configData.empresaID) return navigate("/empresa");
-        const loadData = async () => {
-            const response = await getApiData(
-                configData.server,
-                configData.empresaID
-            );
-            setDataState(response.data);
-            localStorage.setItem("data", JSON.stringify(response.data));
-        };
         if (navigator.onLine) {
-            console.log("online");
             loadData();
         } else {
-            console.log("offline");
             const storageData = getStorageData();
             setDataState(storageData);
         }
@@ -89,11 +80,24 @@ export function HomePage() {
             if (encontrada) {
                 setEmpresa(encontrada);
             }
+            return null;
         });
         countAuditoriasRealizadas();
         countAuditoriasRealizadasNoSinconizadas();
         countCuasiAccidentesRealizados();
     }, []);
+
+    const loadData = async () => {
+        await apiData(configData.server, configData.empresaID)
+            .then((response) => response.json())
+            .then((data) => {
+                setDataState(data);
+                localStorage.setItem("data", JSON.stringify(data));
+            })
+            .catch((error) => {
+                console.log("Error al conectar con el servidor: ", error);
+            });
+    };
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -116,16 +120,28 @@ export function HomePage() {
     };
 
     const handleChangeEmpresa = () => {
-        configData.empresaID = null;
-        configData.empresa = null;
-        localStorage.setItem("config", JSON.stringify(configData));
-        navigate("/empresa");
+        if (navigator.onLine) {
+            configData.empresaID = null;
+            configData.empresa = null;
+            localStorage.setItem("config", JSON.stringify(configData));
+            navigate("/empresa");
+        } else {
+            toast.error(
+                "No se detecta conexión a internet. No es posible cambiar de empresa. Por favor, intente más tarde."
+            );
+        }
     };
 
     const handleLogout = () => {
-        localStorage.clear();
-        initStorage();
-        navigate("/config");
+        if (navigator.onLine) {
+            localStorage.clear();
+            initStorage();
+            navigate("/config");
+        } else {
+            toast.error(
+                "No se detecta conexión a internet. No es posible cerrar sesión. Por favor, intente más tarde."
+            );
+        }
     };
 
     const countAuditoriasRealizadas = () => {
@@ -135,9 +151,7 @@ export function HomePage() {
         const realizadas = storageAuditorias.filter(
             (x) => x.empresa_id === configData.empresaID
         );
-        setTimeout(() => {
-            setNAuditoriasRealizadas(realizadas.length);
-        }, 500);
+        setNAuditoriasRealizadas(realizadas.length);
     };
 
     const countCuasiAccidentesRealizados = () => {
@@ -150,9 +164,7 @@ export function HomePage() {
         // setTimeout(() => {
         //         setNCuasiAccidentesRealizados(realizados.length);
         // }, 3000);
-        setTimeout(() => {
-            setNCuasiAccidentesRealizados(0);
-        }, 500);
+        setNCuasiAccidentesRealizados(0);
     };
 
     const countAuditoriasRealizadasNoSinconizadas = () => {
@@ -171,7 +183,7 @@ export function HomePage() {
                 <Toolbar
                     variant="dense"
                     sx={{
-                        bgcolor: "background.primary",
+                        backgroundColor: "background.primary",
                     }}
                 >
                     <IconButton
@@ -220,7 +232,7 @@ export function HomePage() {
                 >
                     <ListItem
                         sx={{
-                            bgcolor: "primary.main",
+                            backgroundColor: "primary.main",
                             color: "white",
                         }}
                     >
@@ -242,8 +254,7 @@ export function HomePage() {
                         </ListItemButton>
                     </ListItem>
                     <Divider />
-                    <ListItem sx={{ width: drawerWidth
-                     }}>
+                    <ListItem sx={{ width: drawerWidth }}>
                         <Avatar
                             alt="Logo empresa"
                             src={empresa && empresa.logo}
@@ -281,7 +292,7 @@ export function HomePage() {
                         <List
                             component="div"
                             sx={{
-                                bgcolor: "background.main",
+                                backgroundColor: "background.main",
                             }}
                         >
                             <ListItemButton
@@ -356,13 +367,12 @@ export function HomePage() {
                 sx={{
                     display: "flex",
                     flexDirection: "column",
-                    justifyContent: "top",
+                    justifyContent: "start",
                     alignItems: "center",
-                    minHeight: "100vh",
                     pt: 8,
                     px: 2,
                     pb: 2,
-                    bgcolor: "background.main",
+                    backgroundColor: "background.main",
                 }}
             >
                 <Grid
@@ -407,9 +417,10 @@ export function HomePage() {
                         <Grid item xs={12} sm={12} md={12}>
                             <Paper elevation={3}>
                                 <Alert severity="warning">
-                                    Exiten{" "}
+                                    Existen{" "}
                                     {nAuditoriasRealizadasNoSincronizadas}{" "}
                                     auditorias sin sincronizar
+                                    <br />
                                     <Link to="/auditoria/realizada/lista/">
                                         <Button
                                             variant="contained"
@@ -437,7 +448,7 @@ export function HomePage() {
                                     fontWeight: "bold",
                                 }}
                             >
-                                {nAuditoriasRealizadas != undefined ? (
+                                {nAuditoriasRealizadas !== undefined ? (
                                     nAuditoriasRealizadas
                                 ) : (
                                     <CircularProgress />
@@ -446,7 +457,7 @@ export function HomePage() {
                             <Container
                                 sx={{
                                     p: 2,
-                                    bgcolor: "primary.main",
+                                    backgroundColor: "primary.main",
                                     borderBottomLeftRadius: 4,
                                     borderBottomRightRadius: 4,
                                 }}
@@ -470,7 +481,7 @@ export function HomePage() {
                                     fontWeight: "bold",
                                 }}
                             >
-                                {nCuasiAccidentesRealizados != undefined ? (
+                                {nCuasiAccidentesRealizados !== undefined ? (
                                     nCuasiAccidentesRealizados
                                 ) : (
                                     <CircularProgress />
@@ -479,7 +490,7 @@ export function HomePage() {
                             <Container
                                 sx={{
                                     p: 2,
-                                    bgcolor: "primary.main",
+                                    backgroundColor: "primary.main",
                                     borderBottomLeftRadius: 4,
                                     borderBottomRightRadius: 4,
                                 }}

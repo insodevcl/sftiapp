@@ -1,16 +1,43 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import {
+    Box,
+    Backdrop,
+    CircularProgress,
+    Typography,
+    Avatar,
+} from "@mui/material";
+import { apiData } from "../functions/api";
 import { getStorageConfig } from "../functions/functions";
-import { Box, Typography, Avatar, Button } from "@mui/material";
 
 export function EmpresaPage() {
     const navigate = useNavigate();
+    const [open, setOpen] = useState(false);
     const configData = getStorageConfig();
 
     useEffect(() => {
         document.title = "Seleccionar Empresa";
         if (!configData.loginStatus) return navigate("/config");
     }, []);
+
+    const loadData = async () => {
+        setOpen(true);
+        await apiData(configData.server, configData.empresaID)
+            .then((response) => response.json())
+            .then((data) => {
+                localStorage.setItem("data", JSON.stringify(data));
+                setOpen(false);
+                navigate("/");
+            })
+            .catch((error) => {
+                console.log("Error al conectar con el servidor: ", error);
+                toast.error(
+                    "Error al conectar con el servidor. Por favor, intente más tarde."
+                );
+                setOpen(false);
+            });
+    };
 
     const handleSubmit = (e) => {
         const empresaID = e.currentTarget.getAttribute("data-id");
@@ -20,10 +47,12 @@ export function EmpresaPage() {
                     configData.empresaID = empresa.id;
                     configData.empresa = empresa.nombre;
                 }
+                return null;
             });
+            return null;
         });
         localStorage.setItem("config", JSON.stringify(configData));
-        navigate("/");
+        loadData();
     };
 
     return (
@@ -31,9 +60,9 @@ export function EmpresaPage() {
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "top",
+                justifyContent: "start",
                 alignItems: "start",
-                height: "100vh",
+                minHeight: "100vh",
                 p: 2,
                 background:
                     "linear-gradient(135deg, #010b02, #010b02, #59185E, #59185E)",
@@ -65,7 +94,7 @@ export function EmpresaPage() {
                             gap: 2,
                             py: 1,
                             px: 2,
-                            bgcolor: "rgba(255, 255, 255, 0.34)",
+                            backgroundColor: "rgba(255, 255, 255, 0.34)",
                             borderRadius: 2,
                         }}
                     >
@@ -79,7 +108,7 @@ export function EmpresaPage() {
                                 sx={{
                                     width: 64,
                                     height: 64,
-                                    bgcolor: "white",
+                                    backgroundColor: "white",
                                     color: "black",
                                     cursor: "pointer",
                                 }}
@@ -97,6 +126,15 @@ export function EmpresaPage() {
                     </Box>
                 </Box>
             ))}
+            <Backdrop
+                sx={{
+                    color: "white",
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
+                }}
+                open={open}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
         </Box>
     );
 }

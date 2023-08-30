@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { toast } from "react-hot-toast";
+import { toast } from 'react-toastify'
 import {
     Backdrop,
     CircularProgress,
@@ -21,7 +21,7 @@ import LockIcon from "@mui/icons-material/Lock";
 import LoginIcon from "@mui/icons-material/Login";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { getApiServers, getApiLogin } from "../functions/api";
+import { apiServers, apiLogin } from "../functions/api";
 
 export function ConfigPage() {
     const [servers, setServers] = useState([]);
@@ -38,8 +38,15 @@ export function ConfigPage() {
         document.title = "Configuración";
         const loadServer = async () => {
             setOpen(true);
-            const response = await getApiServers();
-            setServers(response.data);
+            await apiServers()
+                .then((response) => response.json())
+                .then((data) => setServers(data))
+                .catch((error) => {
+                    console.log(error);
+                    toast.error(
+                        "Error al conectar con el servidor. Por favor, intente más tarde."
+                    );
+                });
             setOpen(false);
         };
 
@@ -52,28 +59,28 @@ export function ConfigPage() {
 
     const onSubmit = handleSubmit(async (data) => {
         const server = findServer(data.server);
-        try {
-            const response = await getApiLogin(
-                server.url,
-                data.username,
-                data.password
+        await apiLogin(server.url, data.username, data.password)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.status) {
+                    const storageconfig = localStorage.getItem("config");
+                    const configData = JSON.parse(storageconfig);
+                    configData.server = server.url;
+                    configData.loginStatus = true;
+                    configData.user = data.data.user_fullname;
+                    configData.userID = data.data.id;
+                    configData.unidades = data.data.unidades;
+                    localStorage.setItem("config", JSON.stringify(configData));
+                    return navigate("/");
+                } else {
+                    toast.error("Usuario o contraseña incorrectos");
+                }
+            })
+            .catch((error) =>
+                toast.error(
+                    "Error al conectar con el servidor. Por favor, intente más tarde."
+                )
             );
-            if (response.data.status) {
-                const storageconfig = localStorage.getItem("config");
-                const configData = JSON.parse(storageconfig);
-                configData.server = server.url;
-                configData.loginStatus = true;
-                configData.user = response.data.data.user_fullname;
-                configData.userID = response.data.data.id;
-                configData.unidades = response.data.data.unidades;
-                localStorage.setItem("config", JSON.stringify(configData));
-                return navigate("/");
-            } else {
-                toast.error("Usuario o contraseña incorrectos");
-            }
-        } catch (error) {
-            toast.error("Error al conectar con el servidor");
-        }
     });
 
     const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -83,7 +90,7 @@ export function ConfigPage() {
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "top",
+                justifyContent: "start",
                 alignItems: "center",
                 height: "100vh",
                 py: 10,
@@ -130,7 +137,7 @@ export function ConfigPage() {
                     sx={{
                         mb: 2,
                         background: "white",
-                        color: "text.secondary"
+                        color: "text.secondary",
                     }}
                     {...register("server", { required: true })}
                 >
@@ -210,14 +217,14 @@ export function ConfigPage() {
                     type="submit"
                     sx={{
                         mt: 3,
-                        bgcolor: "white",
+                        backgroundColor: "white",
                         color: "black",
                         hover: {
-                            bgcolor: "primary.main",
+                            backgroundColor: "primary.main",
                             color: "white",
                         },
                         active: {
-                            bgcolor: "primary.main",
+                            backgroundColor: "primary.main",
                             color: "white",
                         },
                     }}

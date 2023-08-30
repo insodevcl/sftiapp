@@ -56,7 +56,7 @@ export function AuditoriaDisponibleCard({ auditoria }) {
                         alt="Aplicar auditoria"
                         startIcon={<CheckCircleIcon />}
                         sx={{
-                            bgcolor: "#59185E",
+                            backgroundColor: "#59185E",
                         }}
                     >
                         Aplicar

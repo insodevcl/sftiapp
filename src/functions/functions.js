@@ -63,9 +63,20 @@ export const getStorageAuditoriasRealizadas = (empresaID) => {
     }
 };
 
-export const goToTop = () => {
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-    });
+export const updateSyncAuditoria = (id) => {
+    debugger;
+    const storageAuditorias = localStorage.getItem("auditorias");
+    if (storageAuditorias) {
+        const auditorias = JSON.parse(storageAuditorias);
+        const index = auditorias.findIndex((x) => x.id === id);
+        if (index !== -1) {
+            auditorias[index].sync = true;
+            localStorage.setItem("auditorias", JSON.stringify(auditorias));
+        }
+    }
 }
+
+export const stringToLocalDateTime = (string) => {
+    const date = new Date(string);
+    return date.toLocaleString().replace(",", "");
+};

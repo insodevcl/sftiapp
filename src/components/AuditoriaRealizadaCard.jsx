@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "react-hot-toast";
+import { toast } from "react-toastify";
 import {
     Box,
     Dialog,
@@ -17,13 +17,19 @@ import {
     CircularProgress,
     Typography,
     Divider,
+    Paper,
+    Alert,
 } from "@mui/material";
 import CloudDoneIcon from "@mui/icons-material/CloudDone";
 import CloudSyncIcon from "@mui/icons-material/CloudSync";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { getStorageConfig, getStorageData } from "../functions/functions";
-import { apiSetAuditoria } from "../functions/api";
+import {
+    getStorageConfig,
+    getStorageData,
+    stringToLocalDateTime,
+} from "../functions/functions";
+import { apiAuditoria } from "../functions/api";
 
 export function AuditoriaRealizadaCard({
     auditoriaRealizada,
@@ -33,8 +39,10 @@ export function AuditoriaRealizadaCard({
     const storageData = getStorageData();
     const [auditoria, setAuditoria] = useState(undefined);
     const [subarea, setSubarea] = useState(undefined);
+    const [isLoading, setIsLoading] = useState(true);
     const [openDialog, setOpenDialog] = useState(false);
-    const [sync, setSync] = useState(false);
+    const [online, setOnline] = useState(navigator.onLine);
+    const [sync, setSync] = useState(auditoriaRealizada.sync);
     const [syncing, setSyncing] = useState(false);
     const [nPreguntas, setNPreguntas] = useState(0);
     const [nRespuestasSi, setNRespuestasSi] = useState(0);
@@ -43,7 +51,7 @@ export function AuditoriaRealizadaCard({
     const [nRespuestasNA, setNRespuestasNA] = useState(0);
 
     useEffect(() => {
-        setSync(auditoriaRealizada.sync);
+        setIsLoading(true);
         const auditoria = storageData.auditorias.find(
             (x) => x.id === auditoriaRealizada.auditoria_id
         );
@@ -55,15 +63,11 @@ export function AuditoriaRealizadaCard({
             if (subarea) {
                 setSubarea(subarea);
             }
+            return null;
         });
-        // const realizador = storageData.usuarios.find(
-        //     (x) => x.id === auditoriaRealizada.realizador_id
-        // );
-        if (navigator.onLine) {
-            if (!auditoriaRealizada.sync) {
-                syncAuditoria();
-            }
-        }
+        window.addEventListener("online", () => setOnline(true));
+        window.addEventListener("offline", () => setOnline(false));
+        setIsLoading(false);
     }, []);
 
     useEffect(() => {
@@ -74,6 +78,12 @@ export function AuditoriaRealizadaCard({
         countRespuestasNA();
     }, [auditoria, subarea]);
 
+    useEffect(() => {
+        if (!sync && online) {
+            syncAuditoria();
+        }
+    }, [online]);
+
     const countPreguntas = () => {
         let n = 0;
         auditoria?.grupos?.map((grupo) => {
@@ -81,7 +91,9 @@ export function AuditoriaRealizadaCard({
                 if (pregunta.tipo_id === 2) {
                     n++;
                 }
+                return null;
             });
+            return null;
         });
         setNPreguntas(n);
     };
@@ -114,6 +126,13 @@ export function AuditoriaRealizadaCard({
         setNRespuestasNA(respuestas.length);
     };
 
+    const getRealizador = () => {
+        const realizador = storageData.trabajadores.find(
+            (x) => x.usuario === auditoriaRealizada.user_id
+        );
+        return realizador.nombre;
+    };
+
     const handleOpenDialog = () => {
         setOpenDialog(true);
     };
@@ -124,18 +143,34 @@ export function AuditoriaRealizadaCard({
 
     const syncAuditoria = () => {
         setSyncing(true);
-        apiSetAuditoria(storageConfig.server, auditoriaRealizada)
+        apiAuditoria(storageConfig.server, auditoriaRealizada)
             .then((response) => {
                 if (response.status === 200) {
                     setSync(true);
+                    auditoriaRealizada.sync = true;
+                    updateSyncAuditoriaRealizada(auditoriaRealizada.id);
+                } else {
+                    toast.error(
+                        `Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${response.statusText}`
+                    );
                 }
                 setSyncing(false);
             })
             .catch((error) => {
                 console.log(error);
-                toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${error}`);
+                toast.error(
+                    `Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${error}`
+                );
                 setSyncing(false);
             });
+    };
+
+    const updateSyncAuditoriaRealizada = (id) => {
+        const realizadas = JSON.parse(localStorage.getItem("auditorias"));
+        const index = realizadas.findIndex((x) => x.id === id);
+        realizadas[index].sync = true;
+        localStorage.setItem("auditorias", JSON.stringify(realizadas));
+        setAuditoriasRealizadas(realizadas);
     };
 
     const deleteAuditoriaRealizada = (id) => {
@@ -148,18 +183,13 @@ export function AuditoriaRealizadaCard({
         handleCloseDialog();
     };
 
-    const stringToDatetime = (string) => {
-        const date = new Date(string);
-        return date.toLocaleString();
-    };
-
     const CircularProgressWithLabel = ({ label, value, maxValue, color }) => {
         return (
             <Box
                 sx={{
                     display: "flex",
                     flexDirection: "column",
-                    justifyContent: "center",
+                    justifyContent: "start",
                     alignItems: "center",
                 }}
             >
@@ -196,15 +226,15 @@ export function AuditoriaRealizadaCard({
                     sx={{
                         display: "flex",
                         flexDirection: "column",
-                        justifyContent: "top",
+                        justifyContent: "center",
                         alignItems: "center",
                         pt: 1,
                     }}
                 >
-                    <Typography variant="caption" component="div" color="black">
+                    <Typography variant="caption" color="black" align="center">
                         {label}
                     </Typography>
-                    <Typography variant="caption" component="div" color="black">
+                    <Typography variant="caption" color="black" align="center">
                         {value}/{maxValue}
                     </Typography>
                 </Box>
@@ -214,199 +244,281 @@ export function AuditoriaRealizadaCard({
 
     return (
         <>
-            {auditoria && subarea ? (
+            {isLoading ? (
                 <>
-                    <Dialog
-                        open={openDialog}
-                        onClose={handleCloseDialog}
-                        aria-labelledby="alert-dialog-title"
-                        aria-describedby="alert-dialog-description"
-                    >
-                        <DialogTitle id="alert-dialog-title">
-                            {"¿Desea eliminar esta auditoría realizada?"}
-                        </DialogTitle>
-                        <DialogContent>
-                            <DialogContentText id="alert-dialog-description">
-                                Esta auditoría <b>({auditoria?.nombre})</b>{" "}
-                                realizada el día{" "}
-                                <b>
-                                    {stringToDatetime(auditoriaRealizada.fecha)}
-                                </b>
-                                , no está sincronizada con el servidor y será
-                                eliminada de forma permanente
-                                <br />
-                                <br />
-                                ¿Desea continuar?
-                            </DialogContentText>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={handleCloseDialog}>
-                                Cancelar
-                            </Button>
-                            <Button
-                                onClick={() =>
-                                    deleteAuditoriaRealizada(
-                                        auditoriaRealizada.id
-                                    )
-                                }
-                            >
-                                Continuar
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-                    <Card
-                        raised={true}
+                    <Paper
                         elevation={3}
-                        sx={{ mb: 2, width: "98%", overflow: "visible" }}
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            mb: 2,
+                            p: 1,
+                            width: "95%",
+                        }}
                     >
-                        <CardHeader title={auditoria.nombre} sx={{ py: 1 }} />
-                        <CardContent sx={{ py: 1 }}>
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mb: 1 }}
-                            >
-                                <b>Fecha de realización: </b>
-                                {stringToDatetime(auditoriaRealizada.fecha)}
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mb: 1 }}
-                            >
-                                <b>Descripción: </b>
-                                {auditoria.descripcion}
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mb: 1 }}
-                            >
-                                <b>Tipo: </b>
-                                {auditoria.tipo}
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mb: 1 }}
-                            >
-                                <b>Categoría: </b>
-                                {auditoria.categoria
-                                    ? auditoria.categoria
-                                    : "N/A"}
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mb: 1 }}
-                            >
-                                <b>Subárea: </b>
-                                {subarea ? subarea.nombre : "N/A"}
-                            </Typography>
-                            <Stack
-                                direction="row"
-                                divider={
-                                    <Divider orientation="vertical" flexItem />
-                                }
-                                spacing={2}
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "space-around",
-                                    p: 2,
-                                }}
-                            >
-                                <CircularProgressWithLabel
-                                    label="Si"
-                                    value={nRespuestasSi}
-                                    maxValue={nPreguntas - nRespuestasNA}
-                                    color="success"
-                                />
-                                <CircularProgressWithLabel
-                                    label="No"
-                                    value={nRespuestasNo}
-                                    maxValue={nPreguntas - nRespuestasNA}
-                                    color="error"
-                                />
-                                <CircularProgressWithLabel
-                                    label="N/C"
-                                    value={nRespuestasNC}
-                                    maxValue={nPreguntas - nRespuestasNA}
-                                    color="warning"
-                                />
-                                <CircularProgressWithLabel
-                                    label="N/A"
-                                    value={nRespuestasNA}
-                                    maxValue={nPreguntas}
-                                    color="info"
-                                />
-                            </Stack>
-                        </CardContent>
-                        <CardActions
-                            sx={{
-                                display: "flex",
-                                justifyContent: "space-around",
-                            }}
+                        <Alert
+                            severity="info"
+                            icon={
+                                <CircularProgress color="inherit" size={24} />
+                            }
+                            sx={{ width: "100%" }}
                         >
-                            {!sync && (
-                                <Button
-                                    size="small"
-                                    variant="contained"
-                                    color="error"
-                                    alt="Eliminar"
-                                    startIcon={<DeleteIcon />}
-                                    onClick={handleOpenDialog}
-                                >
-                                    Eliminar
-                                </Button>
-                            )}
-                            {syncing ? (
-                                <CircularProgress size={24} />
-                            ) : (
-                                <>
-                                    {sync ? (
-                                        <Button
-                                            size="small"
-                                            variant="contained"
-                                            disabled={true}
-                                            color="success"
-                                        >
-                                            <CloudDoneIcon />
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            size="small"
-                                            variant="contained"
-                                            color="warning"
-                                            alt="Sincronizar"
-                                            startIcon={<CloudSyncIcon />}
-                                            onClick={syncAuditoria}
-                                        >
-                                            Sincronizar
-                                        </Button>
-                                    )}
-                                </>
-                            )}
-                            <Link
-                                to={`/auditoria/ver/${auditoriaRealizada.id}`}
-                            >
-                                <Button
-                                    size="small"
-                                    variant="contained"
-                                    alt="Ver"
-                                    startIcon={<VisibilityIcon />}
-                                    sx={{
-                                        bgcolor: "#59185E",
-                                    }}
-                                >
-                                    Ver
-                                </Button>
-                            </Link>
-                        </CardActions>
-                    </Card>
+                            Cargando...
+                        </Alert>
+                    </Paper>
                 </>
             ) : (
                 <>
-                    <p>Cargando...</p>
+                    {auditoria && subarea ? (
+                        <>
+                            <Dialog
+                                open={openDialog}
+                                onClose={handleCloseDialog}
+                                aria-labelledby="alert-dialog-title"
+                                aria-describedby="alert-dialog-description"
+                            >
+                                <DialogTitle id="alert-dialog-title">
+                                    {
+                                        "¿Desea eliminar esta auditoría realizada?"
+                                    }
+                                </DialogTitle>
+                                <DialogContent>
+                                    <DialogContentText id="alert-dialog-description">
+                                        Esta auditoría{" "}
+                                        <b>({auditoria?.nombre})</b> realizada
+                                        el día{" "}
+                                        <b>
+                                            {stringToLocalDateTime(
+                                                auditoriaRealizada.fecha
+                                            )}
+                                        </b>
+                                        , no está sincronizada con el servidor y
+                                        será eliminada de forma permanente
+                                        <br />
+                                        <br />
+                                        ¿Desea continuar?
+                                    </DialogContentText>
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={handleCloseDialog}>
+                                        Cancelar
+                                    </Button>
+                                    <Button
+                                        onClick={() =>
+                                            deleteAuditoriaRealizada(
+                                                auditoriaRealizada.id
+                                            )
+                                        }
+                                    >
+                                        Continuar
+                                    </Button>
+                                </DialogActions>
+                            </Dialog>
+                            <Card
+                                raised={true}
+                                elevation={3}
+                                sx={{
+                                    mb: 2,
+                                    width: "98%",
+                                    overflow: "visible",
+                                }}
+                            >
+                                <CardHeader
+                                    title={auditoria.nombre}
+                                    sx={{ py: 1 }}
+                                />
+                                <CardContent sx={{ py: 1 }}>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                    >
+                                        <b>Aplicada por: </b>
+                                        {getRealizador()}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                    >
+                                        <b>Fecha de realización: </b>
+                                        {stringToLocalDateTime(
+                                            auditoriaRealizada.fecha
+                                        )}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                    >
+                                        <b>Descripción: </b>
+                                        {auditoria.descripcion}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                    >
+                                        <b>Tipo: </b>
+                                        {auditoria.tipo}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                    >
+                                        <b>Categoría: </b>
+                                        {auditoria.categoria
+                                            ? auditoria.categoria
+                                            : "N/A"}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{ mb: 1 }}
+                                    >
+                                        <b>Subárea: </b>
+                                        {subarea ? subarea.nombre : "N/A"}
+                                    </Typography>
+                                    <Stack
+                                        direction="row"
+                                        divider={
+                                            <Divider
+                                                orientation="vertical"
+                                                flexItem
+                                            />
+                                        }
+                                        spacing={2}
+                                        sx={{
+                                            display: "flex",
+                                            justifyContent: "space-around",
+                                            p: 2,
+                                        }}
+                                    >
+                                        <CircularProgressWithLabel
+                                            label="Cumple"
+                                            value={nRespuestasSi}
+                                            maxValue={
+                                                nPreguntas - nRespuestasNA
+                                            }
+                                            color="success"
+                                        />
+                                        <CircularProgressWithLabel
+                                            label="No cumple"
+                                            value={nRespuestasNo}
+                                            maxValue={
+                                                nPreguntas - nRespuestasNA
+                                            }
+                                            color="error"
+                                        />
+                                        <CircularProgressWithLabel
+                                            label="Corección"
+                                            value={nRespuestasNC}
+                                            maxValue={
+                                                nPreguntas - nRespuestasNA
+                                            }
+                                            color="warning"
+                                        />
+                                        <CircularProgressWithLabel
+                                            label="No aplica"
+                                            value={nRespuestasNA}
+                                            maxValue={nPreguntas}
+                                            color="info"
+                                        />
+                                    </Stack>
+                                </CardContent>
+                                <CardActions
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "space-around",
+                                    }}
+                                >
+                                    {!sync && (
+                                        <Button
+                                            size="small"
+                                            variant="contained"
+                                            color="error"
+                                            alt="Eliminar"
+                                            startIcon={<DeleteIcon />}
+                                            onClick={handleOpenDialog}
+                                        >
+                                            Eliminar
+                                        </Button>
+                                    )}
+                                    {syncing ? (
+                                        <CircularProgress size={24} />
+                                    ) : (
+                                        <>
+                                            {sync ? (
+                                                <Button
+                                                    size="small"
+                                                    variant="text"
+                                                    color="success"
+                                                >
+                                                    <CloudDoneIcon />
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    size="small"
+                                                    variant="contained"
+                                                    color="warning"
+                                                    alt="Sincronizar"
+                                                    startIcon={
+                                                        <CloudSyncIcon />
+                                                    }
+                                                    onClick={syncAuditoria}
+                                                    disabled={!navigator.onLine}
+                                                >
+                                                    Sincronizar
+                                                </Button>
+                                            )}
+                                        </>
+                                    )}
+                                    <Link
+                                        to={`/auditoria/realizada/ver/${auditoriaRealizada.id}`}
+                                    >
+                                        <Button
+                                            size="small"
+                                            variant="contained"
+                                            alt="Ver"
+                                            startIcon={<VisibilityIcon />}
+                                            sx={{
+                                                backgroundColor: "#59185E",
+                                            }}
+                                        >
+                                            Ver
+                                        </Button>
+                                    </Link>
+                                </CardActions>
+                            </Card>
+                        </>
+                    ) : (
+                        <>
+                            <Paper
+                                elevation={3}
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    mb: 2,
+                                    p: 1,
+                                }}
+                            >
+                                <Alert severity="warning">
+                                    La auditoría realizada{" "}
+                                    <strong>ID: {auditoriaRealizada.id}</strong>{" "}
+                                    no se encuentra en la base de datos o esta
+                                    deshabilitada
+                                    <br />
+                                    <em>
+                                        <strong>ID servidor: </strong>
+                                        {auditoriaRealizada.auditoria_id}
+                                    </em>
+                                </Alert>
+                            </Paper>
+                        </>
+                    )}
                 </>
             )}
         </>

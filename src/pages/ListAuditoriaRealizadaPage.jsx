@@ -9,7 +9,7 @@ import {
     Typography,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import AssistantIcon from "@mui/icons-material/Assistant";
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import { AuditoriaRealizadaCard } from "../components/AuditoriaRealizadaCard";
 import {
     getStorageConfig,
@@ -19,12 +19,17 @@ import {
 export function ListAuditoriaRealizadaPage() {
     const storageConfig = getStorageConfig();
     const [auditoriasRealizadas, setAuditoriasRealizadas] = useState([]);
-
+    const [auditoriasRealizadasOrdenadas, setAuditoriasRealizadasOrdenadas] =
+        useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
         document.title = "Auditorias realizadas";
-        setAuditoriasRealizadas(getStorageAuditoriasRealizadas(storageConfig.empresaID));
+        window.scrollTo(0, 0);
+        const storageAuditoriasRealizadas = getStorageAuditoriasRealizadas(
+            storageConfig.empresaID
+        );
+        setAuditoriasRealizadas(storageAuditoriasRealizadas);
     }, []);
 
     useEffect(() => {
@@ -32,7 +37,8 @@ export function ListAuditoriaRealizadaPage() {
             "auditorias",
             JSON.stringify(auditoriasRealizadas)
         );
-    }, [auditoriasRealizadas])
+        setAuditoriasRealizadasOrdenadas([...auditoriasRealizadas].reverse());
+    }, [auditoriasRealizadas]);
 
     return (
         <Box sx={{ flexGrow: 1 }}>
@@ -40,7 +46,7 @@ export function ListAuditoriaRealizadaPage() {
                 <Toolbar
                     variant="dense"
                     sx={{
-                        bgcolor: "background.primary",
+                        backgroundColor: "background.primary",
                     }}
                 >
                     <IconButton
@@ -66,13 +72,12 @@ export function ListAuditoriaRealizadaPage() {
                 sx={{
                     display: "flex",
                     flexDirection: "column",
-                    justifyContent: "top",
+                    justifyContent: "start",
                     alignItems: "center",
                     pt: 8,
                     px: 1,
                     pb: 2,
-                    bgcolor: "background.main",
-                    minHeight: "100vh",
+                    backgroundColor: "background.main",
                 }}
             >
                 {auditoriasRealizadas.length === 0 ? (
@@ -83,20 +88,24 @@ export function ListAuditoriaRealizadaPage() {
                             p: 2,
                         }}
                     >
-                        <AssistantIcon sx={{ fontSize: 64 }} />
+                        <AssignmentTurnedInIcon sx={{ fontSize: 64 }} />
                         <Typography variant="h6" sx={{ color: "black" }}>
                             Aún no has realizado ninguna auditoria
                         </Typography>
                     </Paper>
                 ) : (
                     <>
-                        {auditoriasRealizadas.map((auditoriaRealizada) => (
-                            <AuditoriaRealizadaCard
-                                key={auditoriaRealizada.id}
-                                auditoriaRealizada={auditoriaRealizada}
-                                setAuditoriasRealizadas={setAuditoriasRealizadas}
-                            />
-                        ))}
+                        {auditoriasRealizadasOrdenadas.map(
+                            (auditoriaRealizada) => (
+                                <AuditoriaRealizadaCard
+                                    key={auditoriaRealizada.id}
+                                    auditoriaRealizada={auditoriaRealizada}
+                                    setAuditoriasRealizadas={
+                                        setAuditoriasRealizadas
+                                    }
+                                />
+                            )
+                        )}
                     </>
                 )}
             </Box>

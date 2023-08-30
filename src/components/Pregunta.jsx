@@ -1,11 +1,13 @@
 import { useState } from "react";
 import {
     Box,
-    Typography,
+    Container,
     Divider,
+    Typography,
     ToggleButtonGroup,
-    ToggleButton,
 } from "@mui/material";
+import styled from "@mui/material/styles/styled";
+import MuiToggleButton from "@mui/material/ToggleButton";
 
 export function Pregunta({ pregunta, handleOption }) {
     const [valor, setValor] = useState("");
@@ -15,30 +17,67 @@ export function Pregunta({ pregunta, handleOption }) {
         handleOption(event, respuesta);
     };
 
+    const ToggleButton = styled(MuiToggleButton)(({ value }) => {
+        let style = {};
+        switch (value) {
+            case 1:
+                style = {
+                    color: "white",
+                    backgroundColor: "#8dc63f",
+                };
+                break;
+            case 2:
+                style = {
+                    color: "white",
+                    backgroundColor: "#cc4141",
+                };
+                break;
+            case 3:
+                style = {
+                    color: "white",
+                    backgroundColor: "#f7941d",
+                };
+                break;
+            default:
+                style = {
+                    color: "#333333",
+                    backgroundColor: "#e0e0e0",
+                };
+                break;
+        }
+        return {
+            "&.Mui-selected, &.Mui-selected:hover": style,
+        };
+    });
+
     return (
         <Box
             key={pregunta.id}
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "top",
+                justifyContent: "start",
                 alignItems: "start",
-                p: 2,
             }}
         >
             {pregunta.tipo_id === 1 && (
-                <>
+                <Container
+                    sx={{
+                        p: 2,
+                    }}
+                >
                     <Typography variant="body1" sx={{ fontWeight: "bold" }}>
                         {pregunta.pregunta}
                     </Typography>
-                    <Divider
-                        variant="fullWidth"
-                        sx={{ borderColor: "#e0e0e0", width: "100%" }}
-                    />
-                </>
+                    <Divider />
+                </Container>
             )}
             {pregunta.tipo_id === 2 && (
-                <>
+                <Container
+                    sx={{
+                        p: 2,
+                    }}
+                >
                     <Typography variant="body1">{pregunta.pregunta}</Typography>
                     {pregunta.referencia && (
                         <Typography
@@ -53,39 +92,19 @@ export function Pregunta({ pregunta, handleOption }) {
                         exclusive
                         fullWidth
                         value={valor}
+                        size="small"
                         onChange={handleValor}
-                        sx={{ my: 2 }}
+                        sx={{
+                            mb: 2,
+                        }}
                     >
-                        <ToggleButton
-                            value={1}
-                            color="success"
-                        >
-                            Cumple
-                        </ToggleButton>
-                        <ToggleButton
-                            value={2}
-                            color="error"
-                        >
-                            No cumple
-                        </ToggleButton>
-                        <ToggleButton
-                            value={3}
-                            color="warning"
-                        >
-                            Corrección
-                        </ToggleButton>
-                        <ToggleButton
-                            value={0}
-                            color="light"
-                        >
-                            N/A
-                        </ToggleButton>
+                        <ToggleButton value={1}>Cumple</ToggleButton>
+                        <ToggleButton value={2}>No cumple</ToggleButton>
+                        <ToggleButton value={3}>Corrección</ToggleButton>
+                        <ToggleButton value={0}>N/A</ToggleButton>
                     </ToggleButtonGroup>
-                    <Divider
-                        variant="fullwidth"
-                        sx={{ borderColor: "#e0e0e0", width: "100%" }}
-                    />
-                </>
+                    <Divider />
+                </Container>
             )}
         </Box>
     );

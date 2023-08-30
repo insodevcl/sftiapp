@@ -6,11 +6,10 @@ import {
     Toolbar,
     IconButton,
     Typography,
-    Container,
     Paper,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import AssistantIcon from "@mui/icons-material/Assistant";
+import SpeakerNotesOffIcon from "@mui/icons-material/SpeakerNotesOff";
 import { AuditoriaDisponibleCard } from "../components/AuditoriaDisponibleCard";
 import { getStorageData } from "../functions/functions";
 
@@ -20,6 +19,7 @@ export function ListAuditoriaDisponiblePage() {
 
     useEffect(() => {
         document.title = "Auditorias disponibles";
+        window.scrollTo(0, 0);
     }, []);
 
     return (
@@ -28,7 +28,7 @@ export function ListAuditoriaDisponiblePage() {
                 <Toolbar
                     variant="dense"
                     sx={{
-                        bgcolor: "background.primary",
+                        backgroundColor: "background.primary",
                     }}
                 >
                     <IconButton
@@ -59,10 +59,10 @@ export function ListAuditoriaDisponiblePage() {
                     pt: 8,
                     px: 1,
                     pb: 2,
-                    bgcolor: "background.main",
+                    backgroundColor: "background.main",
                 }}
             >
-                {storageData?.auditorias.length === 0 ? (
+                {storageData["auditorias"] === undefined ? (
                     <Paper
                         elevation={3}
                         sx={{
@@ -70,19 +70,21 @@ export function ListAuditoriaDisponiblePage() {
                             p: 2,
                         }}
                     >
-                        <AssistantIcon sx={{ fontSize: 64 }} />
+                        <SpeakerNotesOffIcon sx={{ fontSize: 64 }} />
                         <Typography variant="h6" sx={{ color: "black" }}>
                             No se encontraron auditorias disponibles
                         </Typography>
                     </Paper>
                 ) : (
                     <>
-                        {storageData?.auditorias.map((auditoria) => (
-                            <AuditoriaDisponibleCard
-                                key={auditoria.id}
-                                auditoria={auditoria}
-                            />
-                        ))}
+                        {storageData?.auditorias
+                            .filter((x) => x.estado_id === 2)
+                            .map((auditoria) => (
+                                <AuditoriaDisponibleCard
+                                    key={auditoria.id}
+                                    auditoria={auditoria}
+                                />
+                            ))}
                     </>
                 )}
             </Box>

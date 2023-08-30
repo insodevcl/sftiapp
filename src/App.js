@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+import { ToastContainer } from "react-toastify";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { ConfigPage } from "./pages/ConfigPage";
 import { EmpresaPage } from "./pages/EmpresaPage";
@@ -8,6 +8,8 @@ import { HomePage } from "./pages/HomePage";
 import { ListAuditoriaDisponiblePage } from "./pages/ListAuditoriaDisponiblePage";
 import { ListAuditoriaRealizadaPage } from "./pages/ListAuditoriaRealizadaPage";
 import { NewAuditoriaPage } from "./pages/NewAuditoriaPage";
+import { ViewAuditoriaRealizadaPage } from "./pages/ViewAuditoriaRealizadaPage";
+import "react-toastify/dist/ReactToastify.min.css";
 
 function App() {
     const theme = createTheme({
@@ -44,6 +46,10 @@ function App() {
                 main: "#0097da",
                 contrastText: "#ffffff",
             },
+            grey: {
+                main: "#e0e0e0",
+                contrastText: "#ffffff",
+            },
             light: {
                 main: "#3a3a3a",
                 contrastText: "#3a3a3a",
@@ -52,6 +58,7 @@ function App() {
                 primary: "#333333",
                 secondary: "#5a5a5a",
             },
+            divider: "#e0e0e0",
         },
     });
     useEffect(() => {
@@ -87,8 +94,12 @@ function App() {
                         path="/auditoria/aplica/:id"
                         element={<NewAuditoriaPage />}
                     />
+                    <Route
+                        path="/auditoria/realizada/ver/:id"
+                        element={<ViewAuditoriaRealizadaPage />}
+                    />
                 </Routes>
-                <Toaster position="bottom-center" />
+                <ToastContainer position="bottom-center" theme="colored" />
             </BrowserRouter>
         </ThemeProvider>
     );

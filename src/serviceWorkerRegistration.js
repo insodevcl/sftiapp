@@ -10,6 +10,8 @@
 // To learn more about the benefits of this model and instructions on how to
 // opt-in, read https://cra.link/PWA
 
+import { toast } from 'react-toastify'
+
 const isLocalhost = Boolean(
   window.location.hostname === 'localhost' ||
     // [::1] is the IPv6 localhost address.
@@ -71,6 +73,13 @@ function registerValidSW(swUrl, config) {
                 'New content is available and will be used when all ' +
                   'tabs for this page are closed. See https://cra.link/PWA.'
               );
+
+              toast.info("Existe una versión disponible! Para actualizar, cierre esta aplicación y vuelva a abrirla.", {
+                toastId: "appUpdateAvailable", // Prevent duplicate toasts
+                closeButton: false, // Remove the closeButton
+                autoClose: false, // Prevents toast from auto closing
+                closeOnClick: false, // Prevents toast from closing when clicked
+              });
 
               // Execute callback
               if (config && config.onUpdate) {
