@@ -1,5 +1,5 @@
 {
-    "name": "SFTI App",
+    "name": "SFTI Mobile App",
     "short_name": "SFTI App",
     "icons": [
         {
@@ -34,6 +34,7 @@
         }
     ],
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "id": "cl.sfti.app",
     "theme_color": "#59185E",
