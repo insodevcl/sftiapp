@@ -206,7 +206,8 @@ export function HomePage() {
                         <img
                             src="https://insodev-estaticos.s3.amazonaws.com/logos/sfti/app/logo-blanco-texto-blanco-app.png"
                             alt="logo"
-                            height="32"
+                            width={85}
+                            height={32}
                         />
                     </Box>
                 </Toolbar>

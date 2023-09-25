@@ -432,7 +432,37 @@ export function NewAuditoriaPage() {
     };
 
     const renderSelectEquipoEmergencia = (tipo) => {
-        return null;
+        if (tipo.equipos_emergencia.length > 0) {
+            const items = tipo.equipos_emergencia.map((equipo) => {
+                return (
+                    <MenuItem
+                        value={equipo.id}
+                        key={equipo.id}
+                        divider={true}
+                        sx={{
+                            pl: 4,
+                            whiteSpace: "normal",
+                        }}
+                    >
+                        {equipo.nombre}
+                    </MenuItem>
+                );
+            });
+            return [
+                <ListSubheader
+                    key={tipo.id}
+                    sx={{
+                        fontWeight: "bold",
+                        backgroundColor: "background.main",
+                    }}
+                >
+                    {tipo.nombre}
+                </ListSubheader>,
+                ...items,
+            ];
+        } else {
+            return null;
+        }
     };
 
     const renderSubarea = (area) => {
@@ -862,9 +892,9 @@ export function NewAuditoriaPage() {
                                                     emergencia
                                                 </MenuItem>
                                                 {storageData.equipos_emergencia.map(
-                                                    (equipo_emergencia) =>
+                                                    (tipo) =>
                                                         renderSelectEquipoEmergencia(
-                                                            equipo_emergencia
+                                                            tipo
                                                         )
                                                 )}
                                             </Select>
