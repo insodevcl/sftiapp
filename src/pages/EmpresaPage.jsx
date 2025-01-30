@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
+import {toast} from "react-toastify";
 import {
     Box,
     Backdrop,
@@ -8,8 +8,8 @@ import {
     Typography,
     Avatar,
 } from "@mui/material";
-import { apiData } from "../functions/api";
-import { getStorageConfig } from "../functions/functions";
+import {apiData} from "../functions/api";
+import {getStorageConfig} from "../functions/functions";
 
 export function EmpresaPage() {
     const navigate = useNavigate();
@@ -55,6 +55,15 @@ export function EmpresaPage() {
         loadData();
     };
 
+    const getShortCompanyName = (name) => {
+        const words = name.toUpperCase().split(" ");
+        debugger;
+        if (words.length > 1) {
+            return `${words[0].substring(0, 1)} ${words[1].substring(0, 1)}`;
+        }
+        return `${words[0].substring(0, 1)} ${words[0].substring(1, 2)}`;
+    };
+
     return (
         <Box
             sx={{
@@ -72,7 +81,7 @@ export function EmpresaPage() {
                 variant="h5"
                 align="center"
                 color="white"
-                sx={{ mb: 2 }}
+                sx={{mb: 2}}
             >
                 Seleccione la empresa con la cual trabajará
             </Typography>
@@ -84,7 +93,10 @@ export function EmpresaPage() {
                         mb: 2,
                     }}
                 >
-                    <Typography variant="h5" sx={{ color: "white" }}>
+                    <Typography
+                        variant="h5"
+                        sx={{color: "white"}
+                    }>
                         {unidad.nombre}
                     </Typography>
                     <Box
@@ -119,8 +131,7 @@ export function EmpresaPage() {
                                     },
                                 }}
                             >
-                                {`${empresa.nombre.split(" ")[0][0]}`}{" "}
-                                {`${empresa.nombre.split(" ")[1][0]}`}
+                                {getShortCompanyName(empresa.nombre)}
                             </Avatar>
                         ))}
                     </Box>
@@ -133,7 +144,7 @@ export function EmpresaPage() {
                 }}
                 open={open}
             >
-                <CircularProgress color="inherit" />
+                <CircularProgress color="inherit"/>
             </Backdrop>
         </Box>
     );
