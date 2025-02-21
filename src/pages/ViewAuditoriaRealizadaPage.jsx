@@ -42,7 +42,7 @@ export function ViewAuditoriaRealizadaPage() {
         (x) => x.usuario === auditoriaRealizada.user_id
     );
     let subarea = {};
-    storageData.areas.map((area) => {
+    storageData.areas?.map((area) => {
         const encontrada = area.subareas.find(
             (x) => x.id === auditoriaRealizada.subarea_id
         );
@@ -80,7 +80,7 @@ export function ViewAuditoriaRealizadaPage() {
                         ).nombre;
                         break;
                     case 2:
-                        storageData.maquinarias.map((maquinaria) => {
+                        storageData.maquinarias?.map((maquinaria) => {
                             const encontrada = maquinaria.maquinarias.find(
                                 (x) => x.id === auditoriaRealizada.maquinaria_id
                             );
@@ -91,7 +91,7 @@ export function ViewAuditoriaRealizadaPage() {
                         });
                         break;
                     case 3:
-                        storageData.herramientas.map((herramienta) => {
+                        storageData.herramientas?.map((herramienta) => {
                             const encontrada = herramienta.herramientas.find(
                                 (x) =>
                                     x.id === auditoriaRealizada.herramienta_id
@@ -103,7 +103,7 @@ export function ViewAuditoriaRealizadaPage() {
                         });
                         break;
                     case 4:
-                        storageData.equipos.map((equipo) => {
+                        storageData.equipos?.map((equipo) => {
                             const encontrada = equipo.equipos.find(
                                 (x) => x.id === auditoriaRealizada.equipo_id
                             );
@@ -114,12 +114,12 @@ export function ViewAuditoriaRealizadaPage() {
                         });
                         break;
                     case 5:
-                        aplicada = storageData.instalaciones.find(
+                        aplicada = storageData.instalaciones?.find(
                             (x) => x.id === auditoriaRealizada.instalacion_id
                         ).nombre;
                         break;
                     case 6:
-                        aplicada = storageData.transportes.map((transporte) => {
+                        aplicada = storageData.transportes?.map((transporte) => {
                             const encontrada = transporte.transportes.find(
                                 (x) => x.id === auditoriaRealizada.transporte_id
                             );
@@ -130,7 +130,7 @@ export function ViewAuditoriaRealizadaPage() {
                         });
                         break;
                     case 7:
-                        aplicada = storageData.epps.find(
+                        aplicada = storageData.epps?.find(
                             (x) => x.id === auditoriaRealizada.epp_id
                         ).nombre;
                         break;
@@ -370,7 +370,7 @@ export function ViewAuditoriaRealizadaPage() {
                         </Stack>
                     </Paper>
                 </Paper>
-                {auditoria.grupos.map((grupo) => (
+                {auditoria.grupos?.map((grupo) => (
                     <Paper
                         key={grupo.id}
                         sx={{
@@ -396,7 +396,7 @@ export function ViewAuditoriaRealizadaPage() {
                                 {grupo.nombre}
                             </Typography>
                         </Container>
-                        {grupo.preguntas.map((pregunta) => (
+                        {grupo.preguntas?.map((pregunta) => (
                             <PreguntaRealizada
                                 key={pregunta.id}
                                 pregunta={pregunta}

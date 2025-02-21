@@ -41,8 +41,8 @@ export function EmpresaPage() {
 
     const handleSubmit = (e) => {
         const empresaID = e.currentTarget.getAttribute("data-id");
-        configData.unidades.map((unidad) => {
-            unidad.empresas.map((empresa) => {
+        configData?.unidades?.map((unidad) => {
+            unidad.empresas?.map((empresa) => {
                 if (empresa.id === parseInt(empresaID)) {
                     configData.empresaID = empresa.id;
                     configData.empresa = empresa.nombre;
@@ -57,7 +57,6 @@ export function EmpresaPage() {
 
     const getShortCompanyName = (name) => {
         const words = name.toUpperCase().split(" ");
-        debugger;
         if (words.length > 1) {
             return `${words[0].substring(0, 1)} ${words[1].substring(0, 1)}`;
         }
@@ -96,7 +95,7 @@ export function EmpresaPage() {
                     <Typography
                         variant="h5"
                         sx={{color: "white"}
-                    }>
+                        }>
                         {unidad.nombre}
                     </Typography>
                     <Box
@@ -110,29 +109,46 @@ export function EmpresaPage() {
                             borderRadius: 2,
                         }}
                     >
-                        {unidad.empresas.map((empresa) => (
-                            <Avatar
-                                key={empresa.id}
-                                data-id={empresa.id}
-                                alt={empresa.nombre}
-                                src={empresa.logo}
-                                onClick={handleSubmit}
+                        {unidad?.empresas?.map((empresa) => (
+                            <Box
                                 sx={{
-                                    width: 64,
-                                    height: 64,
-                                    backgroundColor: "white",
-                                    color: "black",
-                                    cursor: "pointer",
-                                }}
-                                imgProps={{
-                                    style: {
-                                        objectFit: "contain",
-                                        width: "95%",
-                                    },
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "start",
+                                    alignItems: "center",
+                                    gap: 1,
                                 }}
                             >
-                                {getShortCompanyName(empresa.nombre)}
-                            </Avatar>
+                                <Avatar
+                                    key={empresa.id}
+                                    data-id={empresa.id}
+                                    alt={empresa.nombre}
+                                    src={empresa.logo}
+                                    onClick={handleSubmit}
+                                    sx={{
+                                        width: 64,
+                                        height: 64,
+                                        backgroundColor: "white",
+                                        color: "black",
+                                        cursor: "pointer",
+                                    }}
+                                    imgProps={{
+                                        style: {
+                                            objectFit: "contain",
+                                            width: "95%",
+                                        },
+                                    }}
+                                >
+                                    {getShortCompanyName(empresa.nombre)}
+                                </Avatar>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        textAlign: "center",
+                                        color: "white",
+                                    }}
+                                >{empresa.nombre}</Typography>
+                            </Box>
                         ))}
                     </Box>
                 </Box>

@@ -89,7 +89,7 @@ export function NewAuditoriaPage() {
     const countPreguntas = () => {
         let n = 0;
         auditoria?.grupos?.map((grupo) => {
-            grupo.preguntas.map((pregunta) => {
+            grupo.preguntas?.map((pregunta) => {
                 if (pregunta.tipo_id === 2) {
                     n++;
                 }
@@ -157,8 +157,8 @@ export function NewAuditoriaPage() {
     const getPregunta = (id) => {
         const pregunta_id = id;
         let pregunta = { pregunta: "" };
-        auditoria.grupos.map((grupo) => {
-            if (grupo.preguntas.find((x) => x.id === pregunta_id)) {
+        auditoria?.grupos?.map((grupo) => {
+            if (grupo.preguntas?.find((x) => x.id === pregunta_id)) {
                 pregunta = grupo.preguntas.find((x) => x.id === pregunta_id);
             }
             return null;
@@ -169,7 +169,7 @@ export function NewAuditoriaPage() {
     // const getReference = (id) => {
     //     const pregunta_id = id;
     //     let pregunta = { referencia: "" };
-    //     auditoria.grupos.map((grupo) => {
+    //     auditoria.grupos?.map((grupo) => {
     //         if (grupo.preguntas.find((x) => x.id === pregunta_id)) {
     //             pregunta = grupo.preguntas.find((x) => x.id === pregunta_id);
     //         }
@@ -296,8 +296,8 @@ export function NewAuditoriaPage() {
     };
 
     const renderSelectHerramienta = (tipo) => {
-        if (tipo.herramientas.length > 0) {
-            const items = tipo.herramientas.map((herramienta) => {
+        if (tipo.herramientas?.length > 0) {
+            const items = tipo.herramientas?.map((herramienta) => {
                 return (
                     <MenuItem
                         value={herramienta.id}
@@ -330,8 +330,8 @@ export function NewAuditoriaPage() {
     };
 
     const renderSelectEquipo = (tipo) => {
-        if (tipo.equipos.length > 0) {
-            const items = tipo.equipos.map((equipo) => {
+        if (tipo.equipos?.length > 0) {
+            const items = tipo.equipos?.map((equipo) => {
                 return (
                     <MenuItem
                         value={equipo.id}
@@ -364,8 +364,8 @@ export function NewAuditoriaPage() {
     };
 
     const renderSelectMaquinaria = (tipo) => {
-        if (tipo.maquinarias.length > 0) {
-            const items = tipo.maquinarias.map((maquinaria) => {
+        if (tipo.maquinarias?.length > 0) {
+            const items = tipo.maquinarias?.map((maquinaria) => {
                 return (
                     <MenuItem
                         value={maquinaria.id}
@@ -398,8 +398,8 @@ export function NewAuditoriaPage() {
     };
 
     const renderSelectTransporte = (tipo) => {
-        if (tipo.transportes.length > 0) {
-            const items = tipo.transportes.map((transporte) => {
+        if (tipo.transportes?.length > 0) {
+            const items = tipo.transportes?.map((transporte) => {
                 return (
                     <MenuItem
                         value={transporte.id}
@@ -432,8 +432,8 @@ export function NewAuditoriaPage() {
     };
 
     const renderSelectEquipoEmergencia = (tipo) => {
-        if (tipo.equipos_emergencia.length > 0) {
-            const items = tipo.equipos_emergencia.map((equipo) => {
+        if (tipo.equipos_emergencia?.length > 0) {
+            const items = tipo.equipos_emergencia?.map((equipo) => {
                 return (
                     <MenuItem
                         value={equipo.id}
@@ -466,8 +466,8 @@ export function NewAuditoriaPage() {
     };
 
     const renderSubarea = (area) => {
-        if (area.subareas.length > 0) {
-            const items = area.subareas.map((subarea) => {
+        if (area.subareas?.length > 0) {
+            const items = area.subareas?.map((subarea) => {
                 return (
                     <MenuItem
                         value={subarea.id}
@@ -514,7 +514,8 @@ export function NewAuditoriaPage() {
                     })}
                 >
                     <MenuItem value="">Seleccione un operador</MenuItem>
-                    {storageData.operadores.map((operador) => (
+                    {/*{storageData.operadores?.map((operador) => (*/}
+                    {storageData.trabajador?.map((operador) => (
                         <MenuItem
                             value={operador.id}
                             key={operador.id}
@@ -689,7 +690,7 @@ export function NewAuditoriaPage() {
                                                 <MenuItem value="">
                                                     Seleccione un trabajador
                                                 </MenuItem>
-                                                {storageData.trabajadores.map(
+                                                {storageData.trabajadores?.map(
                                                     (trabajador) => (
                                                         <MenuItem
                                                             value={
@@ -729,7 +730,7 @@ export function NewAuditoriaPage() {
                                                 <MenuItem value="">
                                                     Seleccione una maquinaria
                                                 </MenuItem>
-                                                {storageData.maquinarias.map(
+                                                {storageData.maquinarias?.map(
                                                     (tipo) =>
                                                         renderSelectMaquinaria(
                                                             tipo
@@ -759,7 +760,7 @@ export function NewAuditoriaPage() {
                                                 <MenuItem value="">
                                                     Seleccione una herramienta
                                                 </MenuItem>
-                                                {storageData.herramientas.map(
+                                                {storageData.herramientas?.map(
                                                     (tipo) =>
                                                         renderSelectHerramienta(
                                                             tipo
@@ -789,7 +790,7 @@ export function NewAuditoriaPage() {
                                                 <MenuItem value="">
                                                     Seleccione un equipo
                                                 </MenuItem>
-                                                {storageData.equipos.map(
+                                                {storageData.equipos?.map(
                                                     (tipo) =>
                                                         renderSelectEquipo(tipo)
                                                 )}
@@ -817,7 +818,7 @@ export function NewAuditoriaPage() {
                                                 <MenuItem value="">
                                                     Seleccione una instalación
                                                 </MenuItem>
-                                                {storageData.instalaciones.map(
+                                                {storageData.instalaciones?.map(
                                                     (instalacion) => (
                                                         <MenuItem
                                                             value={
@@ -857,7 +858,7 @@ export function NewAuditoriaPage() {
                                                 <MenuItem value="">
                                                     Seleccione un transporte
                                                 </MenuItem>
-                                                {storageData.transportes.map(
+                                                {storageData.transportes?.map(
                                                     (tipo) =>
                                                         renderSelectTransporte(
                                                             tipo
@@ -891,7 +892,7 @@ export function NewAuditoriaPage() {
                                                     Seleccione un equipo de
                                                     emergencia
                                                 </MenuItem>
-                                                {storageData.equipos_emergencia.map(
+                                                {storageData.equipos_emergencia?.map(
                                                     (tipo) =>
                                                         renderSelectEquipoEmergencia(
                                                             tipo
@@ -919,7 +920,7 @@ export function NewAuditoriaPage() {
                                             <MenuItem value="">
                                                 Seleccione una sucursal
                                             </MenuItem>
-                                            {storageData.sucursales.map(
+                                            {storageData.sucursales?.map(
                                                 (sucursal) => (
                                                     <MenuItem
                                                         value={sucursal.id}
@@ -956,7 +957,7 @@ export function NewAuditoriaPage() {
                                             <MenuItem value="">
                                                 Seleccione una faena
                                             </MenuItem>
-                                            {storageData.faenas.map((faena) => (
+                                            {storageData.faenas?.map((faena) => (
                                                 <MenuItem
                                                     value={faena.id}
                                                     key={faena.id}
@@ -990,7 +991,7 @@ export function NewAuditoriaPage() {
                                             <MenuItem value="">
                                                 Seleccione un contratista
                                             </MenuItem>
-                                            {storageData.contratistas.map(
+                                            {storageData.contratistas?.map(
                                                 (contratista) => (
                                                     <MenuItem
                                                         value={contratista.id}
@@ -1020,7 +1021,7 @@ export function NewAuditoriaPage() {
                                             <MenuItem value="">
                                                 Seleccione una sucursal
                                             </MenuItem>
-                                            {storageData.sucursales.map(
+                                            {storageData.sucursales?.map(
                                                 (sucursal) => (
                                                     <MenuItem
                                                         value={sucursal.id}
@@ -1050,7 +1051,7 @@ export function NewAuditoriaPage() {
                                             <MenuItem value="">
                                                 Seleccione una faena
                                             </MenuItem>
-                                            {storageData.faenas.map((faena) => (
+                                            {storageData.faenas?.map((faena) => (
                                                 <MenuItem
                                                     value={faena.id}
                                                     key={faena.id}
@@ -1082,7 +1083,7 @@ export function NewAuditoriaPage() {
                                     <MenuItem value="">
                                         Seleccione una subárea
                                     </MenuItem>
-                                    {storageData.areas.map((area) =>
+                                    {storageData.areas?.map((area) =>
                                         renderSubarea(area)
                                     )}
                                 </Select>
@@ -1100,7 +1101,7 @@ export function NewAuditoriaPage() {
                                     <MenuItem value="">
                                         Seleccione un lugar
                                     </MenuItem>
-                                    {storageData.lugares.map((lugar) => (
+                                    {storageData.lugares?.map((lugar) => (
                                         <MenuItem
                                             value={lugar.id}
                                             key={lugar.id}
@@ -1140,7 +1141,7 @@ export function NewAuditoriaPage() {
                                         {grupo.nombre}
                                     </Typography>
                                 </Container>
-                                {grupo.preguntas.map((pregunta) => (
+                                {grupo?.preguntas?.map((pregunta) => (
                                     <Pregunta
                                         pregunta={pregunta}
                                         handleOption={handleOption}
@@ -1278,7 +1279,7 @@ export function NewAuditoriaPage() {
                                 </Container>
                             ) : (
                                 <>
-                                    {tareas.map((tarea) => (
+                                    {tareas?.map((tarea) => (
                                         <Tarea
                                             tarea={tarea}
                                             updateTareas={updateTareas}

@@ -56,7 +56,7 @@ export function AuditoriaRealizadaCard({
             (x) => x.id === auditoriaRealizada.auditoria_id
         );
         setAuditoria(auditoria);
-        storageData.areas.map((area) => {
+        storageData.areas?.map((area) => {
             const subarea = area.subareas.find(
                 (x) => x.id === auditoriaRealizada.subarea_id
             );
@@ -87,7 +87,7 @@ export function AuditoriaRealizadaCard({
     const countPreguntas = () => {
         let n = 0;
         auditoria?.grupos?.map((grupo) => {
-            grupo.preguntas.map((pregunta) => {
+            grupo.preguntas?.map((pregunta) => {
                 if (pregunta.tipo_id === 2) {
                     n++;
                 }

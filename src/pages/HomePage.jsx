@@ -73,7 +73,7 @@ export function HomePage() {
             const storageData = getStorageData();
             setDataState(storageData);
         }
-        configData.unidades.map((unidad) => {
+        configData.unidades?.map((unidad) => {
             const encontrada = unidad.empresas.find(
                 (x) => x.id === configData.empresaID
             );
@@ -177,6 +177,14 @@ export function HomePage() {
         setNAuditoriasRealizadasNoSincronizadas(realizadas.length);
     };
 
+    const getShortCompanyName = (name) => {
+        const words = name.toUpperCase().split(" ");
+        if (words.length > 1) {
+            return `${words[0].substring(0, 1)} ${words[1].substring(0, 1)}`;
+        }
+        return `${words[0].substring(0, 1)} ${words[0].substring(1, 2)}`;
+    };
+
     return (
         <Box sx={{ flexGrow: 1 }}>
             <AppBar position="fixed">
@@ -274,8 +282,7 @@ export function HomePage() {
                         >
                             {empresa && (
                                 <>
-                                    {`${empresa.nombre.split(" ")[0][0]}`}{" "}
-                                    {`${empresa.nombre.split(" ")[1][0]}`}
+                                    {getShortCompanyName(empresa.nombre)}
                                 </>
                             )}
                         </Avatar>

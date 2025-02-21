@@ -188,7 +188,7 @@ export function Tarea({ tarea, updateTareas, getPregunta }) {
                 }}
             >
                 <MenuItem value="">Seleccione una criticidad</MenuItem>
-                {storageData.todo_criticidad.map((criticidad) => (
+                {storageData.todo_criticidad?.map((criticidad) => (
                     <MenuItem
                         value={criticidad.id}
                         key={criticidad.id}

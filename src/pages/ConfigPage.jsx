@@ -142,7 +142,7 @@ export function ConfigPage() {
                     {...register("server", { required: true })}
                 >
                     <MenuItem value="">----------</MenuItem>
-                    {servers.map((server) => (
+                    {servers?.map((server) => (
                         <MenuItem value={server.id} key={server.id}>
                             {server.url}
                         </MenuItem>
