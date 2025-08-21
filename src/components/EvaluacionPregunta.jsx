@@ -1,16 +1,10 @@
-import { useState } from "react";
-import {
-    Box,
-    Container,
-    Divider,
-    Typography,
-    ToggleButtonGroup,
-} from "@mui/material";
-import styled from "@mui/material/styles/styled";
-import MuiToggleButton from "@mui/material/ToggleButton";
+import { useState } from 'react';
+import { Box, Container, Divider, Typography, ToggleButtonGroup } from '@mui/material';
+import styled from '@mui/material/styles/styled';
+import MuiToggleButton from '@mui/material/ToggleButton';
 
-export function Pregunta({ pregunta, handleOption }) {
-    const [valor, setValor] = useState("");
+export function EvaluacionPregunta({ pregunta, handleOption }) {
+    const [valor, setValor] = useState('');
 
     const handleValor = (event, respuesta) => {
         setValor(respuesta);
@@ -18,7 +12,7 @@ export function Pregunta({ pregunta, handleOption }) {
     };
 
     const ToggleButton = styled(MuiToggleButton)(({ value }) => {
-        let style = {};
+        let style;
         switch (value) {
             case 1:
                 style = {
@@ -79,12 +73,9 @@ export function Pregunta({ pregunta, handleOption }) {
                     }}
                 >
                     <Typography variant="body1">{pregunta.pregunta}</Typography>
-                    {pregunta.referencia && (
-                        <Typography
-                            variant="body2"
-                            sx={{ fontStyle: "italic" }}
-                        >
-                            <b>Referencia:</b> {pregunta.referencia}
+                    {pregunta.norma_legal && (
+                        <Typography variant="body2" sx={{ fontStyle: "italic" }}>
+                            <b>Referencia:</b> {pregunta.norma_legal}
                         </Typography>
                     )}
                     <ToggleButtonGroup

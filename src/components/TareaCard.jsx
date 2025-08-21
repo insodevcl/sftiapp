@@ -1,41 +1,30 @@
-import { useState, useEffect } from "react";
-import {
-    Container,
-    TextField,
-    Divider,
-    InputLabel,
-    Select,
-    MenuItem,
-    Autocomplete,
-} from "@mui/material";
-import { getStorageData } from "../functions/functions";
+import {useState, useEffect} from 'react';
+import {Container, TextField, Divider, InputLabel, Select, MenuItem, Autocomplete} from '@mui/material';
 
-export function Tarea({ tarea, updateTareas, getPregunta }) {
-    const id = tarea.id;
-    const descripcionForm = `NO CUMPLE: ${getPregunta(id)}`;
-    const [tareaForm, setTareaForm] = useState("");
-    const [supervisorForm, setSupervisorForm] = useState("");
-    const [responsableForm, setResponsableForm] = useState("");
-    const [criticidadForm, setCriticidadForm] = useState("");
-    const [fechaCierreForm, setFechaCierreForm] = useState("");
+export function TareaCard({tarea, updateTareas, getPregunta}) {
+    const [descripcion, setDescripcion] = useState('EvaluacionPregunta no encontrada');
+    const [supervisores, setSupervisores] = useState([]);
+    const [responsables, setResponsables] = useState([]);
+    const [criticidades, setCriticidades] = useState([]);
+    const [tareaForm, setTareaForm] = useState('');
+    const [supervisorForm, setSupervisorForm] = useState('');
+    const [responsableForm, setResponsableForm] = useState('');
+    const [criticidadForm, setCriticidadForm] = useState('');
+    const [fechaCierreForm, setFechaCierreForm] = useState('');
 
     useEffect(() => {
-        updateTareas(
-            id,
-            tareaForm,
-            descripcionForm,
-            supervisorForm,
-            responsableForm,
-            criticidadForm,
-            fechaCierreForm
-        );
-    }, [
-        tareaForm,
-        supervisorForm,
-        responsableForm,
-        criticidadForm,
-        fechaCierreForm,
-    ]);
+        const storageTrabajadores = JSON.parse(localStorage.getItem('trabajador'));
+        setResponsables(storageTrabajadores);
+        const storageSupervisores = storageTrabajadores.filter((x) => x.usuario_id !== null);
+        setSupervisores(storageSupervisores);
+        const storageTodoCriticidad = JSON.parse(localStorage.getItem('todo_criticidad'));
+        setCriticidades(storageTodoCriticidad || []);
+        setDescripcion(`NO CUMPLE: ${getPregunta(tarea.pregunta_id)}`);
+    }, []);
+
+    useEffect(() => {
+        updateTareas(tarea.pregunta_id, tareaForm, descripcion, supervisorForm, responsableForm, criticidadForm, fechaCierreForm);
+    }, [tareaForm, supervisorForm, responsableForm, criticidadForm, fechaCierreForm]);
 
     const handleTarea = (event) => {
         setTareaForm(event.target.value);
@@ -45,7 +34,7 @@ export function Tarea({ tarea, updateTareas, getPregunta }) {
         if (value) {
             setSupervisorForm(value.id);
         } else {
-            setSupervisorForm("");
+            setSupervisorForm('');
         }
     };
 
@@ -53,7 +42,7 @@ export function Tarea({ tarea, updateTareas, getPregunta }) {
         if (value) {
             setResponsableForm(value.id);
         } else {
-            setResponsableForm("");
+            setResponsableForm('');
         }
     };
 
@@ -65,12 +54,10 @@ export function Tarea({ tarea, updateTareas, getPregunta }) {
         setFechaCierreForm(event.target.value);
     };
 
-    const storageData = getStorageData();
-
     return (
         <Container
-            key={tarea.id}
-            data-id={tarea.id}
+            key={tarea.pregunta_id}
+            data-id={tarea.pregunta_id}
             sx={{
                 p: 2,
                 backgroundColor: "white",
@@ -97,7 +84,7 @@ export function Tarea({ tarea, updateTareas, getPregunta }) {
                 multiline
                 rows={4}
                 fullWidth
-                value={descripcionForm}
+                value={descripcion}
                 inputProps={{
                     readOnly: true,
                 }}
@@ -107,24 +94,17 @@ export function Tarea({ tarea, updateTareas, getPregunta }) {
             ></TextField>
             <InputLabel id="id_label_supervisor">Supervisor</InputLabel>
             <Autocomplete
-                labelId="id_label_supervisor"
                 name="supervisor"
                 fullWidth
                 defaultValue={null}
-                value={
-                    storageData.supervisores.find(
-                        (supervisor) => supervisor.id === supervisorForm
-                    ) || null
-                }
+                value={supervisores.find((supervisor) => supervisor.id === supervisorForm) || null}
                 onChange={handleSupervisor}
-                options={storageData.supervisores}
+                options={supervisores}
                 getOptionLabel={(option) => option.nombre}
                 renderOption={(props, option) => (
-                    <li
-                        {...props}
+                    <li {...props}
                         key={option.id}
-                        style={{ borderBottom: "1px solid #e0e0e0" }}
-                    >
+                        style={{borderBottom: "1px solid #e0e0e0"}}>
                         {option.nombre}
                     </li>
                 )}
@@ -141,32 +121,25 @@ export function Tarea({ tarea, updateTareas, getPregunta }) {
             />
             <InputLabel id="id_label_responsable">Responsable</InputLabel>
             <Autocomplete
-                labelId="id_label_responsable"
                 name="responsable"
                 fullWidth
                 defaultValue={null}
-                value={
-                    storageData.responsables.find(
-                        (responsable) => responsable.id === responsableForm
-                    ) || null
-                }
+                value={responsables.find((responsable) => responsable.id === responsableForm) || null}
                 onChange={handleResponsable}
-                options={storageData.responsables}
+                options={responsables}
                 getOptionLabel={(option) => option.nombre}
                 renderOption={(props, option) => (
-                    <li
-                        {...props}
+                    <li {...props}
                         key={option.id}
-                        style={{ borderBottom: "1px solid #e0e0e0" }}
-                    >
+                        style={{borderBottom: "1px solid #e0e0e0"}}>
                         {option.nombre}
                     </li>
                 )}
                 renderInput={(params) => (
                     <TextField
                         {...params}
-                        variant="outlined"
                         label="Seleccione un responsable"
+                        variant="outlined"
                         required
                     />
                 )}
@@ -176,11 +149,10 @@ export function Tarea({ tarea, updateTareas, getPregunta }) {
             />
             <InputLabel id="id_label_criticidad">Criticidad</InputLabel>
             <Select
-                labelId="id_label_criticidad"
                 name="criticidad"
                 required
                 fullWidth
-                defaultValue={""}
+                defaultValue={''}
                 value={criticidadForm}
                 onChange={handleCriticidad}
                 sx={{
@@ -188,7 +160,7 @@ export function Tarea({ tarea, updateTareas, getPregunta }) {
                 }}
             >
                 <MenuItem value="">Seleccione una criticidad</MenuItem>
-                {storageData.todo_criticidad?.map((criticidad) => (
+                {criticidades.map((criticidad) => (
                     <MenuItem
                         value={criticidad.id}
                         key={criticidad.id}
@@ -213,7 +185,7 @@ export function Tarea({ tarea, updateTareas, getPregunta }) {
                     mb: 2,
                 }}
             ></TextField>
-            <Divider />
+            <Divider/>
         </Container>
     );
 }

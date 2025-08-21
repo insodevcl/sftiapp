@@ -1,158 +1,74 @@
-import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import {useEffect} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
+import {Box, Container, AppBar, Toolbar, IconButton, Typography, Divider, Paper, Stack} from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import RemoveCircleIcon from '@mui/icons-material/RemoveCircle';
+import CircleIcon from '@mui/icons-material/Circle';
 import {
-    Box,
-    Container,
-    AppBar,
-    Toolbar,
-    IconButton,
-    Typography,
-    Divider,
-    Paper,
-    Stack,
-} from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
-import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
-import CircleIcon from "@mui/icons-material/Circle";
-import {
-    getStorageConfig,
-    getStorageData,
-    getStorageAuditoriasRealizadas,
+    getConfigFromStorage,
     stringToLocalDateTime,
-} from "../functions/functions";
-import { PreguntaRealizada } from "../components/PreguntaRealizada";
+    getEvaluacionFromStorage,
+    getAuditoriaFromStorage,
+    getTrabajadorFromStorage,
+    getCriticidadFromStorage,
+} from '../functions/functions';
+import {AuditoriaRespuesta} from '../components/AuditoriaRespuesta';
 
 export function ViewAuditoriaRealizadaPage() {
-    const { id } = useParams();
+    const {id} = useParams();
+    const auditoria = getAuditoriaFromStorage(id)
+    const evaluacion = getEvaluacionFromStorage(auditoria.evaluacion_id)
     const navigate = useNavigate();
-    const storageConfig = getStorageConfig();
-    const storageData = getStorageData();
-    const auditoriasRealizadas = getStorageAuditoriasRealizadas(
-        storageConfig.empresaID
-    );
-    const auditoriaRealizada = auditoriasRealizadas.find(
-        (x) => x.id === parseInt(id)
-    );
-    const auditoria = storageData.auditorias.find(
-        (x) => x.id === auditoriaRealizada.auditoria_id
-    );
-    const realizador = storageData.trabajadores.find(
-        (x) => x.usuario === auditoriaRealizada.user_id
-    );
-    let subarea = {};
-    storageData.areas?.map((area) => {
-        const encontrada = area.subareas.find(
-            (x) => x.id === auditoriaRealizada.subarea_id
-        );
-        if (encontrada) {
-            subarea = { ...encontrada, area: area.nombre };
-        }
-        return null;
-    });
-    const operador = storageData.trabajadores.find(
-        (x) => x.id === auditoriaRealizada.operador_id
-    );
-    const getSupervisor = (id) => {
-        return storageData.trabajadores.find((x) => x.id === id).nombre;
-    };
-    const getResponsable = (id) => {
-        return storageData.trabajadores.find((x) => x.id === id).nombre;
-    };
-    const getCriticidad = (id) => {
-        return storageData.todo_criticidad.find((x) => x.id === id).nivel;
-    };
+    const storageConfig = getConfigFromStorage();
 
     useEffect(() => {
-        document.title = "Ver auditoría realizada";
+        document.title = 'Ver auditoría realizada';
         window.scrollTo(0, 0);
+        if (!storageConfig.userToken) return navigate('/config');
+        if (!storageConfig.empresaID) return navigate('/empresa');
     }, []);
 
     const getAplicada = () => {
         let aplicada = undefined;
-        switch (auditoria.tipo_id) {
+        switch (evaluacion.tipo_id) {
             case 2:
-                switch (auditoria.categoria_id) {
+                switch (evaluacion.categoria_id) {
                     case 1:
-                        aplicada = storageData.trabajadores.find(
-                            (x) => x.id === auditoriaRealizada.trabajador_id
-                        ).nombre;
+                        aplicada = `Trabajador (${auditoria.trabajador})`;
                         break;
                     case 2:
-                        storageData.maquinarias?.map((maquinaria) => {
-                            const encontrada = maquinaria.maquinarias.find(
-                                (x) => x.id === auditoriaRealizada.maquinaria_id
-                            );
-                            if (encontrada) {
-                                aplicada = encontrada.nombre;
-                            }
-                            return null;
-                        });
+                        aplicada = `Maquinaria (${auditoria.maquinaria})`;
                         break;
                     case 3:
-                        storageData.herramientas?.map((herramienta) => {
-                            const encontrada = herramienta.herramientas.find(
-                                (x) =>
-                                    x.id === auditoriaRealizada.herramienta_id
-                            );
-                            if (encontrada) {
-                                aplicada = encontrada.nombre;
-                            }
-                            return null;
-                        });
+                        aplicada = `Herramienta (${auditoria.herramienta})`;
                         break;
                     case 4:
-                        storageData.equipos?.map((equipo) => {
-                            const encontrada = equipo.equipos.find(
-                                (x) => x.id === auditoriaRealizada.equipo_id
-                            );
-                            if (encontrada) {
-                                aplicada = encontrada.nombre;
-                            }
-                            return null;
-                        });
+                        aplicada = `Equipo (${auditoria.equipo})`;
                         break;
                     case 5:
-                        aplicada = storageData.instalaciones?.find(
-                            (x) => x.id === auditoriaRealizada.instalacion_id
-                        ).nombre;
+                        aplicada = `Instalación (${auditoria.instalacion})`;
                         break;
                     case 6:
-                        aplicada = storageData.transportes?.map((transporte) => {
-                            const encontrada = transporte.transportes.find(
-                                (x) => x.id === auditoriaRealizada.transporte_id
-                            );
-                            if (encontrada) {
-                                aplicada = encontrada.nombre;
-                            }
-                            return null;
-                        });
+                        aplicada = `Trasporte (${auditoria.transporte})`;
                         break;
                     case 7:
-                        aplicada = storageData.epps?.find(
-                            (x) => x.id === auditoriaRealizada.epp_id
-                        ).nombre;
+                        aplicada = `Equipo de emergencia (${auditoria.equipo_emergencia})`;
                         break;
                     default:
-                        aplicada = "No aplica";
+                        aplicada = 'No aplica';
                         break;
                 }
                 break;
             case 3:
-                aplicada = storageData.sucursales.find(
-                    (x) => x.id === auditoriaRealizada.sucursal_id
-                ).nombre;
+                aplicada = `Sucursal (${auditoria.sucursal})`;
                 break;
             case 4:
-                aplicada = storageData.faenas.find(
-                    (x) => x.id === auditoriaRealizada.faena_id
-                ).nombre;
+                aplicada = `Faena (${auditoria.faena})`;
                 break;
             case 5:
-                aplicada = storageData.contratistas.find(
-                    (x) => x.id === auditoriaRealizada.contratista_id
-                ).nombre;
+                aplicada = `Contratista (${auditoria.contratista})`;
                 break;
             default:
                 break;
@@ -161,12 +77,12 @@ export function ViewAuditoriaRealizadaPage() {
     };
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{flexGrow: 1}}>
             <AppBar position="fixed">
                 <Toolbar
                     variant="dense"
                     sx={{
-                        backgroundColor: "background.primary",
+                        backgroundColor: 'background.primary',
                     }}
                 >
                     <IconButton
@@ -175,112 +91,90 @@ export function ViewAuditoriaRealizadaPage() {
                         color="inherit"
                         aria-label="volver"
                         onClick={() => navigate(-1)}
-                        sx={{ mr: 2 }}
+                        sx={{mr: 2}}
                     >
-                        <ArrowBackIcon />
+                        <ArrowBackIcon/>
                     </IconButton>
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{ flexGrow: 1 }}
-                    >
+                    <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
                         Auditoria realizada ID: {id}
                     </Typography>
                 </Toolbar>
             </AppBar>
             <Box
                 sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "start",
-                    alignItems: "center",
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'start',
+                    alignItems: 'center',
                     pt: 8,
                     px: 2,
                     pb: 2,
-                    backgroundColor: "background.main",
+                    backgroundColor: 'background.main',
                 }}
             >
                 <Paper
                     elevation={3}
                     sx={{
-                        width: "100%",
-                        backgroundColor: "white",
+                        width: '100%',
+                        backgroundColor: 'white',
                         mb: 2,
                     }}
                 >
                     <Container
                         sx={{
-                            textAlign: "center",
+                            textAlign: 'center',
                             p: 2,
-                            backgroundColor: "background.primary",
+                            backgroundColor: 'background.primary',
                             borderTopLeftRadius: 4,
                             borderTopRightRadius: 4,
                         }}
                     >
-                        <Typography
-                            variant="h6"
-                            component="div"
-                            sx={{ color: "white" }}
-                        >
+                        <Typography variant="h6" component="div" sx={{color: 'white'}}>
                             Antecedentes de la auditoría
                         </Typography>
                     </Container>
                     <Container
                         sx={{
-                            textAlign: "left",
+                            textAlign: 'left',
                             p: 2,
                         }}
                     >
                         <Typography variant="body1" component="div">
-                            <strong>Nombre:</strong> {auditoria.nombre}
+                            <strong>Descripción:</strong> {evaluacion.descripcion}
                         </Typography>
                         <Typography variant="body1" component="div">
-                            <strong>Descripción:</strong>{" "}
-                            {auditoria.descripcion}
+                            <strong>Fecha de realización:</strong> {stringToLocalDateTime(auditoria.fecha)}
                         </Typography>
                         <Typography variant="body1" component="div">
-                            <strong>Fecha de realización:</strong>{" "}
-                            {stringToLocalDateTime(auditoriaRealizada.fecha)}
+                            <strong>Aplicada por:</strong> {auditoria.realizador}
                         </Typography>
                         <Typography variant="body1" component="div">
-                            <strong>Aplicada por:</strong> {realizador.nombre}
+                            <strong>Tipo:</strong> {evaluacion.tipo}
                         </Typography>
                         <Typography variant="body1" component="div">
-                            <strong>Tipo:</strong> {auditoria.tipo}
+                            <strong>Categoría:</strong> {evaluacion.categoria || 'No aplica'}
                         </Typography>
                         <Typography variant="body1" component="div">
-                            <strong>Categoría:</strong>{" "}
-                            {auditoria.categoria || "No aplica"}
+                            <strong>Subárea:</strong> {auditoria.subarea}
                         </Typography>
                         <Typography variant="body1" component="div">
-                            <strong>Área:</strong> {subarea.area}
+                            <strong>Aplicada a:</strong> {getAplicada()}
                         </Typography>
                         <Typography variant="body1" component="div">
-                            <strong>Subárea:</strong> {subarea.nombre}
+                            <strong>Operador:</strong> {auditoria.operador || 'No aplica'}
                         </Typography>
-                        {getAplicada() && (
-                            <Typography variant="body1" component="div">
-                                <strong>Aplicada a:</strong> {getAplicada()}
-                            </Typography>
-                        )}
-                        {operador && (
-                            <Typography variant="body1" component="div">
-                                <strong>Operador:</strong>{" "}
-                                {operador ? operador.nombre : "No aplica"}
-                            </Typography>
-                        )}
                     </Container>
                     <Paper
                         variant="outlined"
                         sx={{
-                            backgroundColor: "white",
+                            backgroundColor: 'white',
                             m: 2,
                         }}
                     >
                         <Typography
                             variant="h6"
                             sx={{
-                                textAlign: "center",
+                                textAlign: 'center',
                                 mb: 2,
                             }}
                         >
@@ -288,81 +182,73 @@ export function ViewAuditoriaRealizadaPage() {
                         </Typography>
                         <Stack
                             direction="row"
-                            divider={
-                                <Divider orientation="vertical" flexItem />
-                            }
+                            divider={<Divider orientation="vertical" flexItem/>}
                             sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
                             }}
                         >
                             <Container
                                 sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "start",
-                                    alignItems: "center",
-                                    textAlign: "center",
-                                    height: "64px",
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'start',
+                                    alignItems: 'center',
+                                    textAlign: 'center',
+                                    height: '64px',
                                     p: 0,
                                 }}
                             >
-                                <CheckCircleIcon
-                                    fontSize="small"
-                                    color="success"
-                                />
+                                <CheckCircleIcon fontSize="small" color="success"/>
                                 <Typography variant="body2" component="em">
                                     Cumple
                                 </Typography>
                             </Container>
                             <Container
                                 sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "start",
-                                    alignItems: "center",
-                                    textAlign: "center",
-                                    height: "64px",
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'start',
+                                    alignItems: 'center',
+                                    textAlign: 'center',
+                                    height: '64px',
                                     p: 0,
                                 }}
                             >
-                                <CancelIcon fontSize="small" color="error" />
+                                <CancelIcon fontSize="small" color="error"/>
                                 <Typography variant="body2" component="em">
                                     No cumple
                                 </Typography>
                             </Container>
                             <Container
                                 sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "start",
-                                    alignItems: "center",
-                                    textAlign: "center",
-                                    height: "64px",
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'start',
+                                    alignItems: 'center',
+                                    textAlign: 'center',
+                                    height: '64px',
                                     p: 0,
                                 }}
                             >
-                                <RemoveCircleIcon
-                                    fontSize="small"
-                                    color="warning"
-                                />
+                                <RemoveCircleIcon fontSize="small" color="warning"/>
                                 <Typography variant="body2" component="em">
                                     Corrección
                                 </Typography>
                             </Container>
                             <Container
                                 sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "start",
-                                    alignItems: "center",
-                                    textAlign: "center",
-                                    height: "64px",
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'start',
+                                    alignItems: 'center',
+                                    textAlign: 'center',
+                                    height: '64px',
                                     p: 0,
                                 }}
                             >
-                                <CircleIcon fontSize="small" color="grey" />
+                                <CircleIcon fontSize="small" color="grey"/>
                                 <Typography variant="body2" component="em">
                                     No aplica
                                 </Typography>
@@ -370,37 +256,33 @@ export function ViewAuditoriaRealizadaPage() {
                         </Stack>
                     </Paper>
                 </Paper>
-                {auditoria.grupos?.map((grupo) => (
+                {evaluacion.grupos?.map((grupo) => (
                     <Paper
                         key={grupo.id}
                         sx={{
-                            width: "100%",
-                            backgroundColor: "white",
+                            width: '100%',
+                            backgroundColor: 'white',
                             mb: 2,
                         }}
                     >
                         <Container
                             sx={{
-                                textAlign: "center",
+                                textAlign: 'center',
                                 p: 2,
-                                backgroundColor: "background.primary",
+                                backgroundColor: 'background.primary',
                                 borderTopLeftRadius: 4,
                                 borderTopRightRadius: 4,
                             }}
                         >
-                            <Typography
-                                variant="h6"
-                                component="div"
-                                sx={{ color: "white" }}
-                            >
+                            <Typography variant="h6" component="div" sx={{color: 'white'}}>
                                 {grupo.nombre}
                             </Typography>
                         </Container>
                         {grupo.preguntas?.map((pregunta) => (
-                            <PreguntaRealizada
+                            <AuditoriaRespuesta
                                 key={pregunta.id}
                                 pregunta={pregunta}
-                                auditoriaRealizada={auditoriaRealizada}
+                                auditoria={auditoria}
                             />
                         ))}
                     </Paper>
@@ -408,40 +290,32 @@ export function ViewAuditoriaRealizadaPage() {
                 <Paper
                     elevation={3}
                     sx={{
-                        width: "100%",
-                        backgroundColor: "white",
+                        width: '100%',
+                        backgroundColor: 'white',
                         mb: 2,
                     }}
                 >
                     <Container
                         sx={{
-                            textAlign: "center",
+                            textAlign: 'center',
                             p: 2,
-                            backgroundColor: "background.primary",
+                            backgroundColor: 'background.primary',
                             borderTopLeftRadius: 4,
                             borderTopRightRadius: 4,
                         }}
                     >
-                        <Typography
-                            variant="h6"
-                            component="div"
-                            sx={{ color: "white" }}
-                        >
+                        <Typography variant="h6" component="div" sx={{color: 'white'}}>
                             <b>Observaciones</b>
                         </Typography>
                     </Container>
-                    {auditoriaRealizada.observaciones === "" ? (
+                    {auditoria.observaciones === '' ? (
                         <Container
                             sx={{
-                                textAlign: "center",
+                                textAlign: 'center',
                                 p: 2,
                             }}
                         >
-                            <Typography
-                                variant="body1"
-                                component="div"
-                                sx={{ color: "black" }}
-                            >
+                            <Typography variant="body1" component="div" sx={{color: 'black'}}>
                                 No se registraron observaciones
                             </Typography>
                         </Container>
@@ -452,7 +326,7 @@ export function ViewAuditoriaRealizadaPage() {
                             }}
                         >
                             <Typography variant="body1" component="div">
-                                {auditoriaRealizada.observaciones}
+                                {auditoria.observaciones}
                             </Typography>
                         </Container>
                     )}
@@ -460,46 +334,38 @@ export function ViewAuditoriaRealizadaPage() {
                 <Paper
                     elevation={3}
                     sx={{
-                        width: "100%",
-                        backgroundColor: "white",
+                        width: '100%',
+                        backgroundColor: 'white',
                         mb: 2,
                     }}
                 >
                     <Container
                         sx={{
-                            textAlign: "center",
+                            textAlign: 'center',
                             p: 2,
-                            backgroundColor: "background.primary",
+                            backgroundColor: 'background.primary',
                             borderTopLeftRadius: 4,
                             borderTopRightRadius: 4,
                         }}
                     >
-                        <Typography
-                            variant="h6"
-                            component="div"
-                            sx={{ color: "white" }}
-                        >
+                        <Typography variant="h6" component="div" sx={{color: 'white'}}>
                             <b>Asignación de tareas</b>
                         </Typography>
                     </Container>
-                    {auditoriaRealizada.tareas.length === 0 ? (
+                    {auditoria.tareas.length === 0 ? (
                         <Container
                             sx={{
-                                textAlign: "center",
+                                textAlign: 'center',
                                 p: 2,
                             }}
                         >
-                            <Typography
-                                variant="body1"
-                                component="div"
-                                sx={{ color: "black" }}
-                            >
+                            <Typography variant="body1" component="div" sx={{color: 'black'}}>
                                 No se registraron tareas
                             </Typography>
                         </Container>
                     ) : (
                         <>
-                            {auditoriaRealizada.tareas.map((tarea) => (
+                            {auditoria.tareas.map((tarea) => (
                                 <Container
                                     sx={{
                                         p: 2,
@@ -512,20 +378,16 @@ export function ViewAuditoriaRealizadaPage() {
                                         <b>Descripción:</b> {tarea.descripcion}
                                     </Typography>
                                     <Typography variant="body1" component="div">
-                                        <b>Supervisor:</b>{" "}
-                                        {getSupervisor(tarea.supervisor_id)}
+                                        <b>Supervisor:</b> {getTrabajadorFromStorage(tarea.supervisor_id)?.nombre}
                                     </Typography>
                                     <Typography variant="body1" component="div">
-                                        <b>Responsable:</b>{" "}
-                                        {getResponsable(tarea.responsable_id)}
+                                        <b>Responsable:</b> {getTrabajadorFromStorage(tarea.responsable_id)?.nombre}
                                     </Typography>
                                     <Typography variant="body1" component="div">
-                                        <b>Criticidad:</b>{" "}
-                                        {getCriticidad(tarea.criticidad_id)}
+                                        <b>Criticidad:</b> {getCriticidadFromStorage(tarea.criticidad_id)?.nivel}
                                     </Typography>
                                     <Typography variant="body1" component="div">
-                                        <b>Fecha de cierre:</b>{" "}
-                                        {tarea.fecha_cierre}
+                                        <b>Fecha de cierre:</b> {tarea.fecha_cierre}
                                     </Typography>
                                     <Divider
                                         sx={{
@@ -537,7 +399,7 @@ export function ViewAuditoriaRealizadaPage() {
                         </>
                     )}
                 </Paper>
-                <Divider />
+                <Divider/>
             </Box>
         </Box>
     );

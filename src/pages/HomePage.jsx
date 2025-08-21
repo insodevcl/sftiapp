@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import {useState, useEffect} from 'react';
+import {useNavigate, Link} from 'react-router-dom';
+import {toast} from 'react-toastify';
 import {
     Box,
     AppBar,
@@ -27,84 +27,50 @@ import {
     CircularProgress,
     Container,
     Alert,
-} from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
-import ChecklistIcon from "@mui/icons-material/Checklist";
-import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import ExpandLess from "@mui/icons-material/ExpandLess";
-import ExpandMore from "@mui/icons-material/ExpandMore";
-import CachedIcon from "@mui/icons-material/Cached";
-import LogoutIcon from "@mui/icons-material/Logout";
-import WavingHandIcon from "@mui/icons-material/WavingHand";
-import {
-    initStorage,
-    getStorageConfig,
-    getStorageData,
-} from "../functions/functions";
-import { apiData } from "../functions/api";
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import ChecklistIcon from '@mui/icons-material/Checklist';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import CachedIcon from '@mui/icons-material/Cached';
+import LogoutIcon from '@mui/icons-material/Logout';
+import WavingHandIcon from '@mui/icons-material/WavingHand';
+import {initializeStorage, getConfigFromStorage, setConfigToStorage, getShortCompanyName, updateData} from '../functions/functions';
 
 export function HomePage() {
-    const [dataState, setDataState] = useState({});
-    const [open, setOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [openSubmenu1, setOpenSubmenu1] = useState(false);
     const [openDialog, setOpenDialog] = useState(false);
-    const [empresa, setEmpresa] = useState(undefined);
-    const [nAuditoriasRealizadas, setNAuditoriasRealizadas] =
-        useState(undefined);
-    const [
-        nAuditoriasRealizadasNoSincronizadas,
-        setNAuditoriasRealizadasNoSincronizadas,
-    ] = useState(0);
-    const [nCuasiAccidentesRealizados, setNCuasiAccidentesRealizados] =
-        useState(undefined);
-    const configData = getStorageConfig();
+    const [nAuditoriasRealizadas, setNAuditoriasRealizadas] = useState(undefined);
+    const [nAuditoriasRealizadasNoSincronizadas, setNAuditoriasRealizadasNoSincronizadas] = useState(0);
+    const [nCuasiAccidentesRealizados, setNCuasiAccidentesRealizados] = useState(undefined);
+    const storageConfig = getConfigFromStorage();
     const navigate = useNavigate();
     const drawerWidth = 240;
 
     useEffect(() => {
-        document.title = "Inicio";
-        initStorage();
-        if (!configData.loginStatus) return navigate("/config");
-        if (!configData.empresaID) return navigate("/empresa");
+        document.title = 'Inicio';
+        initializeStorage();
+        if (!storageConfig.userToken) return navigate('/config');
+        if (!storageConfig.empresaID) return navigate('/empresa');
         if (navigator.onLine) {
-            loadData();
-        } else {
-            const storageData = getStorageData();
-            setDataState(storageData);
+            updateData().catch(() => {
+                toast.error('Error al cargar los datos. Por favor, intente más tarde.');
+            });
         }
-        configData.unidades?.map((unidad) => {
-            const encontrada = unidad.empresas.find(
-                (x) => x.id === configData.empresaID
-            );
-            if (encontrada) {
-                setEmpresa(encontrada);
-            }
-            return null;
-        });
         countAuditoriasRealizadas();
-        countAuditoriasRealizadasNoSinconizadas();
+        countAuditoriasRealizadasNoSincronizadas();
         countCuasiAccidentesRealizados();
     }, []);
 
-    const loadData = async () => {
-        await apiData(configData.server, configData.empresaID)
-            .then((response) => response.json())
-            .then((data) => {
-                setDataState(data);
-                localStorage.setItem("data", JSON.stringify(data));
-            })
-            .catch((error) => {
-                console.log("Error al conectar con el servidor: ", error);
-            });
-    };
-
     const handleDrawerOpen = () => {
-        setOpen(true);
+        setIsLoading(true);
     };
 
     const handleDrawerClose = () => {
-        setOpen(false);
+        setIsLoading(false);
     };
 
     const handleClickSubmenu1 = () => {
@@ -121,13 +87,16 @@ export function HomePage() {
 
     const handleChangeEmpresa = () => {
         if (navigator.onLine) {
-            configData.empresaID = null;
-            configData.empresa = null;
-            localStorage.setItem("config", JSON.stringify(configData));
-            navigate("/empresa");
+            storageConfig.empresa = null;
+            storageConfig.empresaID = null;
+            storageConfig.empresaDni = null;
+            storageConfig.empresaLogo = null;
+            setConfigToStorage(storageConfig);
+            navigate('/empresa');
         } else {
             toast.error(
-                "No se detecta conexión a internet. No es posible cambiar de empresa. Por favor, intente más tarde."
+                'Conexión a internet no disponible. No es posible cambiar de empresa. ' +
+                'Por favor, intente más tarde.'
             );
         }
     };
@@ -135,31 +104,28 @@ export function HomePage() {
     const handleLogout = () => {
         if (navigator.onLine) {
             localStorage.clear();
-            initStorage();
-            navigate("/config");
+            initializeStorage();
+            navigate('/config');
         } else {
             toast.error(
-                "No se detecta conexión a internet. No es posible cerrar sesión. Por favor, intente más tarde."
+                'Conexión a internet no disponible. No es posible cerrar sesión. ' +
+                'Por favor, intente más tarde.'
             );
         }
     };
 
     const countAuditoriasRealizadas = () => {
-        const storageAuditorias = JSON.parse(
-            localStorage.getItem("auditorias")
-        );
-        const realizadas = storageAuditorias.filter(
-            (x) => x.empresa_id === configData.empresaID
-        );
+        const storageAuditorias = JSON.parse(localStorage.getItem('auditoria'));
+        const realizadas = storageAuditorias.filter((x) => x.empresa_id === storageConfig.empresaID);
         setNAuditoriasRealizadas(realizadas.length);
     };
 
     const countCuasiAccidentesRealizados = () => {
         //     const storageCuasiAccidentes = JSON.parse(
-        //         localStorage.getItem("cuasiAccidentes")
+        //         localStorage.getItem('cuasiAccidentes')
         //     );
         //     const realizados = storageCuasiAccidentes.filter(
-        //         (x) => x.empresa_id === configData.empresaID
+        //         (x) => x.empresa_id === storageConfig.empresaID
         //     );
         // setTimeout(() => {
         //         setNCuasiAccidentesRealizados(realizados.length);
@@ -167,31 +133,19 @@ export function HomePage() {
         setNCuasiAccidentesRealizados(0);
     };
 
-    const countAuditoriasRealizadasNoSinconizadas = () => {
-        const storageAuditorias = JSON.parse(
-            localStorage.getItem("auditorias")
-        );
-        const realizadas = storageAuditorias.filter(
-            (x) => x.empresa_id === configData.empresaID && !x.sync
-        );
+    const countAuditoriasRealizadasNoSincronizadas = () => {
+        const storageAuditorias = JSON.parse(localStorage.getItem('auditoria'));
+        const realizadas = storageAuditorias.filter((x) => x.empresa_id === storageConfig.empresaID && !x.sync);
         setNAuditoriasRealizadasNoSincronizadas(realizadas.length);
     };
 
-    const getShortCompanyName = (name) => {
-        const words = name.toUpperCase().split(" ");
-        if (words.length > 1) {
-            return `${words[0].substring(0, 1)} ${words[1].substring(0, 1)}`;
-        }
-        return `${words[0].substring(0, 1)} ${words[0].substring(1, 2)}`;
-    };
-
     return (
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{flexGrow: 1}}>
             <AppBar position="fixed">
                 <Toolbar
                     variant="dense"
                     sx={{
-                        backgroundColor: "background.primary",
+                        backgroundColor: 'background.primary',
                     }}
                 >
                     <IconButton
@@ -200,14 +154,14 @@ export function HomePage() {
                         size="large"
                         aria-label="menu"
                         onClick={handleDrawerOpen}
-                        sx={{ mr: 2 }}
+                        sx={{mr: 2}}
                     >
-                        <MenuIcon />
+                        <MenuIcon/>
                     </IconButton>
                     <Box
                         sx={{
-                            display: "flex",
-                            justifyContent: "end",
+                            display: 'flex',
+                            justifyContent: 'end',
                             flexGrow: 1,
                         }}
                     >
@@ -224,13 +178,13 @@ export function HomePage() {
                 sx={{
                     width: drawerWidth,
                     flexShrink: 0,
-                    "& .MuiDrawer-paper": {
+                    '& .MuiDrawer-paper': {
                         width: drawerWidth,
-                        boxSizing: "border-box",
+                        boxSizing: 'border-box',
                     },
                 }}
                 anchor="left"
-                open={open}
+                open={isLoading}
             >
                 <List
                     component="nav"
@@ -241,32 +195,32 @@ export function HomePage() {
                 >
                     <ListItem
                         sx={{
-                            backgroundColor: "primary.main",
-                            color: "white",
+                            backgroundColor: 'primary.main',
+                            color: 'white',
                         }}
                     >
                         <ListItemText
                             primary="Menú"
                             sx={{
-                                width: "100%",
+                                width: '100%',
                             }}
                         />
                         <ListItemButton onClick={handleDrawerClose}>
                             <ListItemIcon
                                 sx={{
-                                    justifyContent: "flex-end",
-                                    color: "white",
+                                    justifyContent: 'flex-end',
+                                    color: 'white',
                                 }}
                             >
-                                <CloseIcon />
+                                <CloseIcon/>
                             </ListItemIcon>
                         </ListItemButton>
                     </ListItem>
-                    <Divider />
-                    <ListItem sx={{ width: drawerWidth }}>
+                    <Divider/>
+                    <ListItem sx={{width: drawerWidth}}>
                         <Avatar
                             alt="Logo empresa"
-                            src={empresa && empresa.logo}
+                            src={storageConfig.empresaLogo}
                             sx={{
                                 width: 60,
                                 height: 60,
@@ -275,70 +229,60 @@ export function HomePage() {
                             }}
                             imgProps={{
                                 style: {
-                                    objectFit: "contain",
-                                    width: "85%",
+                                    objectFit: 'contain',
+                                    width: '85%',
                                 },
                             }}
                         >
-                            {empresa && (
-                                <>
-                                    {getShortCompanyName(empresa.nombre)}
-                                </>
-                            )}
+                            {getShortCompanyName(storageConfig.empresa)}
                         </Avatar>
-                        <ListItemText primary={empresa && empresa.nombre} />
+                        <ListItemText primary={storageConfig.empresa}/>
                     </ListItem>
-                    <Divider />
+                    <Divider/>
                     <ListItemButton onClick={handleClickSubmenu1}>
                         <ListItemIcon>
-                            <ChecklistIcon />
+                            <ChecklistIcon/>
                         </ListItemIcon>
-                        <ListItemText primary="Auditorias" />
-                        {openSubmenu1 ? <ExpandLess /> : <ExpandMore />}
+                        <ListItemText primary="Auditorias"/>
+                        {openSubmenu1 ? <ExpandLess/> : <ExpandMore/>}
                     </ListItemButton>
                     <Collapse in={openSubmenu1} timeout="auto" unmountOnExit>
                         <List
                             component="div"
                             sx={{
-                                backgroundColor: "background.main",
+                                backgroundColor: 'background.main',
                             }}
                         >
-                            <ListItemButton
-                                component={Link}
-                                to="/auditoria/disponible/lista/"
-                            >
+                            <ListItemButton component={Link} to="/auditoria/disponible/lista/">
                                 <ListItemIcon>
-                                    <ArrowRightIcon />
+                                    <ArrowRightIcon/>
                                 </ListItemIcon>
-                                <ListItemText primary="Disponibles" />
+                                <ListItemText primary="Disponibles"/>
                             </ListItemButton>
-                            <Divider />
-                            <ListItemButton
-                                component={Link}
-                                to="/auditoria/realizada/lista/"
-                            >
+                            <Divider/>
+                            <ListItemButton component={Link} to="/auditoria/realizada/lista/">
                                 <ListItemIcon>
-                                    <ArrowRightIcon />
+                                    <ArrowRightIcon/>
                                 </ListItemIcon>
-                                <ListItemText primary="Realizadas" />
+                                <ListItemText primary="Realizadas"/>
                             </ListItemButton>
                         </List>
                     </Collapse>
-                    <Divider />
+                    <Divider/>
                     <ListItemButton onClick={handleChangeEmpresa}>
                         <ListItemIcon>
-                            <CachedIcon />
+                            <CachedIcon/>
                         </ListItemIcon>
-                        <ListItemText primary="Cambiar empresa" />
+                        <ListItemText primary="Cambiar empresa"/>
                     </ListItemButton>
-                    <Divider />
+                    <Divider/>
                     <ListItemButton onClick={handleClickOpenDialog}>
                         <ListItemIcon>
-                            <LogoutIcon />
+                            <LogoutIcon/>
                         </ListItemIcon>
-                        <ListItemText primary="Cerrar sesión" />
+                        <ListItemText primary="Cerrar sesión"/>
                     </ListItemButton>
-                    <Divider />
+                    <Divider/>
                 </List>
             </Drawer>
             <Dialog
@@ -347,47 +291,43 @@ export function HomePage() {
                 aria-labelledby="alert-dialog-title"
                 aria-describedby="alert-dialog-description"
             >
-                <DialogTitle id="alert-dialog-title">
-                    {"¿Desea cerrar sesión?"}
-                </DialogTitle>
+                <DialogTitle id="alert-dialog-title">{'¿Desea cerrar sesión?'}</DialogTitle>
                 <DialogContent>
                     <DialogContentText id="alert-dialog-description">
-                        Esta acción descartará cualquier dato que no este
-                        sincronizado.
-                        <br />
-                        <br />
-                        Es necesario volver a iniciar sesión para continuar,
-                        para lo cual, requiere de una conexión a internet
-                        estable.
-                        <br />
-                        <br />
+                        Esta acción descartará cualquier dato que no este sincronizado.
+                        <br/>
+                        <br/>
+                        Es necesario volver a iniciar sesión para continuar, para lo cual, requiere de una conexión a
+                        internet estable.
+                        <br/>
+                        <br/>
                         ¿Desea continuar?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog}>Cancelar</Button>
                     <Button onClick={handleLogout} autoFocus>
-                        Cerrar Sesión
+                        Cerrar sesión
                     </Button>
                 </DialogActions>
             </Dialog>
             <Box
                 sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "start",
-                    alignItems: "center",
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'start',
+                    alignItems: 'center',
                     pt: 8,
                     px: 2,
                     pb: 2,
-                    backgroundColor: "background.main",
+                    backgroundColor: 'background.main',
                 }}
             >
                 <Grid
                     container
                     spacing={2}
                     sx={{
-                        width: "100%",
+                        width: '100%',
                     }}
                 >
                     <Grid item xs={12} sm={12} md={12}>
@@ -397,27 +337,23 @@ export function HomePage() {
                                 p: 2,
                             }}
                         >
-                            {configData.user ? (
+                            {storageConfig.userFullName ? (
                                 <>
                                     <Typography variant="body1" align="left">
-                                        <WavingHandIcon
-                                            fontSize="small"
-                                            color="primary"
-                                        />{" "}
-                                        Bienvenido
+                                        <WavingHandIcon fontSize="small" color="primary"/> Bienvenido
                                     </Typography>
                                     <Typography
                                         variant="body1"
                                         align="left"
                                         sx={{
-                                            fontWeight: "bold",
+                                            fontWeight: 'bold',
                                         }}
                                     >
-                                        {configData.user}
+                                        {storageConfig.userFullName}
                                     </Typography>
                                 </>
                             ) : (
-                                <CircularProgress />
+                                <CircularProgress/>
                             )}
                         </Paper>
                     </Grid>
@@ -425,17 +361,15 @@ export function HomePage() {
                         <Grid item xs={12} sm={12} md={12}>
                             <Paper elevation={3}>
                                 <Alert severity="warning">
-                                    Existen{" "}
-                                    {nAuditoriasRealizadasNoSincronizadas}{" "}
-                                    auditorias sin sincronizar
-                                    <br />
+                                    Existen {nAuditoriasRealizadasNoSincronizadas} auditorias sin sincronizar
+                                    <br/>
                                     <Link to="/auditoria/realizada/lista/">
                                         <Button
                                             variant="contained"
                                             color="primary"
                                             alt="Ver auditorias realizadas"
                                             size="small"
-                                            startIcon={<ArrowRightIcon />}
+                                            startIcon={<ArrowRightIcon/>}
                                             sx={{
                                                 mt: 2,
                                             }}
@@ -453,28 +387,20 @@ export function HomePage() {
                                 variant="h2"
                                 align="center"
                                 sx={{
-                                    fontWeight: "bold",
+                                    fontWeight: 'bold',
                                 }}
                             >
-                                {nAuditoriasRealizadas !== undefined ? (
-                                    nAuditoriasRealizadas
-                                ) : (
-                                    <CircularProgress />
-                                )}
+                                <>{nAuditoriasRealizadas !== undefined ? nAuditoriasRealizadas : <CircularProgress/>}</>
                             </Typography>
                             <Container
                                 sx={{
                                     p: 2,
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: 'primary.main',
                                     borderBottomLeftRadius: 4,
                                     borderBottomRightRadius: 4,
                                 }}
                             >
-                                <Typography
-                                    variant="body1"
-                                    align="center"
-                                    color="white"
-                                >
+                                <Typography variant="body1" align="center" color="white">
                                     Auditorias realizadas
                                 </Typography>
                             </Container>
@@ -486,28 +412,21 @@ export function HomePage() {
                                 variant="h2"
                                 align="center"
                                 sx={{
-                                    fontWeight: "bold",
+                                    fontWeight: 'bold',
                                 }}
                             >
-                                {nCuasiAccidentesRealizados !== undefined ? (
-                                    nCuasiAccidentesRealizados
-                                ) : (
-                                    <CircularProgress />
-                                )}
+                                <>{nCuasiAccidentesRealizados !== undefined ? nCuasiAccidentesRealizados :
+                                    <CircularProgress/>}</>
                             </Typography>
                             <Container
                                 sx={{
                                     p: 2,
-                                    backgroundColor: "primary.main",
+                                    backgroundColor: 'primary.main',
                                     borderBottomLeftRadius: 4,
                                     borderBottomRightRadius: 4,
                                 }}
                             >
-                                <Typography
-                                    variant="body1"
-                                    align="center"
-                                    color="white"
-                                >
+                                <Typography variant="body1" align="center" color="white">
                                     Cuasiaccidentes realizados
                                 </Typography>
                             </Container>

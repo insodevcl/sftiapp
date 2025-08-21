@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import {useState, useEffect} from 'react';
+import {Link} from 'react-router-dom';
+import {toast} from 'react-toastify';
 import {
     Box,
     Dialog,
@@ -19,26 +19,17 @@ import {
     Divider,
     Paper,
     Alert,
-} from "@mui/material";
-import CloudDoneIcon from "@mui/icons-material/CloudDone";
-import CloudSyncIcon from "@mui/icons-material/CloudSync";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import DeleteIcon from "@mui/icons-material/Delete";
-import {
-    getStorageConfig,
-    getStorageData,
-    stringToLocalDateTime,
-} from "../functions/functions";
-import { apiAuditoria } from "../functions/api";
+} from '@mui/material';
+import CloudDoneIcon from '@mui/icons-material/CloudDone';
+import CloudSyncIcon from '@mui/icons-material/CloudSync';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import DeleteIcon from '@mui/icons-material/Delete';
+import {getConfigFromStorage, stringToLocalDateTime} from '../functions/functions';
+import {apiAuditoriaPost} from '../functions/api';
 
-export function AuditoriaRealizadaCard({
-    auditoriaRealizada,
-    setAuditoriasRealizadas,
-}) {
-    const storageConfig = getStorageConfig();
-    const storageData = getStorageData();
-    const [auditoria, setAuditoria] = useState(undefined);
-    const [subarea, setSubarea] = useState(undefined);
+export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealizada}) {
+    const storageConfig = getConfigFromStorage();
+    const [evaluacion, setEvaluacion] = useState(undefined);
     const [isLoading, setIsLoading] = useState(true);
     const [openDialog, setOpenDialog] = useState(false);
     const [online, setOnline] = useState(navigator.onLine);
@@ -52,21 +43,11 @@ export function AuditoriaRealizadaCard({
 
     useEffect(() => {
         setIsLoading(true);
-        const auditoria = storageData.auditorias.find(
-            (x) => x.id === auditoriaRealizada.auditoria_id
-        );
-        setAuditoria(auditoria);
-        storageData.areas?.map((area) => {
-            const subarea = area.subareas.find(
-                (x) => x.id === auditoriaRealizada.subarea_id
-            );
-            if (subarea) {
-                setSubarea(subarea);
-            }
-            return null;
-        });
-        window.addEventListener("online", () => setOnline(true));
-        window.addEventListener("offline", () => setOnline(false));
+        const storageAuditoriasDisponible = JSON.parse(localStorage.getItem('evaluacion'));
+        const auditoriaEncontrada = storageAuditoriasDisponible.find((x) => x.id === auditoriaRealizada.evaluacion_id);
+        setEvaluacion(auditoriaEncontrada);
+        window.addEventListener('online', () => setOnline(true));
+        window.addEventListener('offline', () => setOnline(false));
         setIsLoading(false);
     }, []);
 
@@ -76,7 +57,7 @@ export function AuditoriaRealizadaCard({
         countRespuestasNo();
         countRespuestasNC();
         countRespuestasNA();
-    }, [auditoria, subarea]);
+    }, [evaluacion]);
 
     useEffect(() => {
         if (!sync && online) {
@@ -85,52 +66,37 @@ export function AuditoriaRealizadaCard({
     }, [online]);
 
     const countPreguntas = () => {
-        let n = 0;
-        auditoria?.grupos?.map((grupo) => {
+        let contador = 0;
+        evaluacion?.grupos?.map((grupo) => {
             grupo.preguntas?.map((pregunta) => {
                 if (pregunta.tipo_id === 2) {
-                    n++;
+                    contador++;
                 }
                 return null;
             });
             return null;
         });
-        setNPreguntas(n);
+        setNPreguntas(contador);
     };
 
     const countRespuestasSi = () => {
-        const respuestas = auditoriaRealizada.respuestas.filter(
-            (x) => x.respuesta === 1
-        );
+        const respuestas = auditoriaRealizada.respuestas.filter((x) => x.respuesta === 1);
         setNRespuestasSi(respuestas.length);
     };
 
     const countRespuestasNo = () => {
-        const respuestas = auditoriaRealizada.respuestas.filter(
-            (x) => x.respuesta === 2
-        );
+        const respuestas = auditoriaRealizada.respuestas.filter((x) => x.respuesta === 2);
         setNRespuestasNo(respuestas.length);
     };
 
     const countRespuestasNC = () => {
-        const respuestas = auditoriaRealizada.respuestas.filter(
-            (x) => x.respuesta === 3
-        );
+        const respuestas = auditoriaRealizada.respuestas.filter((x) => x.respuesta === 3);
         setNRespuestasNC(respuestas.length);
     };
 
     const countRespuestasNA = () => {
-        const respuestas = auditoriaRealizada.respuestas.filter(
-            (x) => x.respuesta === 0
-        );
+        const respuestas = auditoriaRealizada.respuestas.filter((x) => x.respuesta === 0);
         setNRespuestasNA(respuestas.length);
-    };
-
-    const getRealizador = () => {
-        const realizador = storageData.trabajadores.find(
-            (x) => x.usuario === auditoriaRealizada.user_id
-        );
-        return realizador.nombre;
     };
 
     const handleOpenDialog = () => {
@@ -143,47 +109,43 @@ export function AuditoriaRealizadaCard({
 
     const syncAuditoria = () => {
         setSyncing(true);
-        apiAuditoria(storageConfig.server, auditoriaRealizada)
+        apiAuditoriaPost(storageConfig.serverUrl, auditoriaRealizada)
             .then((response) => {
                 if (response.status === 200) {
                     setSync(true);
                     auditoriaRealizada.sync = true;
                     updateSyncAuditoriaRealizada(auditoriaRealizada.id);
                 } else {
-                    toast.error(
-                        `Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${response.statusText}`
-                    );
+                    toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${response.statusText}`);
                 }
                 setSyncing(false);
             })
             .catch((error) => {
                 console.log(error);
-                toast.error(
-                    `Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${error}`
-                );
+                toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${error}`);
                 setSyncing(false);
             });
     };
 
     const updateSyncAuditoriaRealizada = (id) => {
-        const realizadas = JSON.parse(localStorage.getItem("auditorias"));
-        const index = realizadas.findIndex((x) => x.id === id);
-        realizadas[index].sync = true;
-        localStorage.setItem("auditorias", JSON.stringify(realizadas));
-        setAuditoriasRealizadas(realizadas);
+        const auditoriasRealizadas = JSON.parse(localStorage.getItem('auditoria'));
+        const index = auditoriasRealizadas.findIndex((x) => x.id === id);
+        auditoriasRealizadas[index].sync = true;
+        localStorage.setItem('auditoria', JSON.stringify(auditoriasRealizadas));
+        setAuditoriasRealizada(auditoriasRealizadas);
     };
 
     const deleteAuditoriaRealizada = (id) => {
-        console.log("delete: " + id);
-        const realizadas = JSON.parse(localStorage.getItem("auditorias"));
-        const index = realizadas.findIndex((x) => x.id === id);
-        realizadas.splice(index, 1);
-        localStorage.setItem("auditorias", JSON.stringify(realizadas));
-        setAuditoriasRealizadas(realizadas);
+        console.log(`Auditoria delete: ${id}`);
+        const auditoriasRealizadas = JSON.parse(localStorage.getItem('auditoria'));
+        const index = auditoriasRealizadas.findIndex((x) => x.id === id);
+        auditoriasRealizadas.splice(index, 1);
+        localStorage.setItem('auditoria', JSON.stringify(auditoriasRealizadas));
+        setAuditoriasRealizada(auditoriasRealizadas);
         handleCloseDialog();
     };
 
-    const CircularProgressWithLabel = ({ label, value, maxValue, color }) => {
+    const CircularProgressWithLabel = ({label, value, maxValue, color}) => {
         return (
             <Box
                 sx={{
@@ -193,7 +155,11 @@ export function AuditoriaRealizadaCard({
                     alignItems: "center",
                 }}
             >
-                <Box sx={{ position: "relative", display: "inline-flex" }}>
+                <Box
+                    sx={{
+                        position: "relative",
+                        display: "inline-flex"
+                }}>
                     <CircularProgress
                         variant="determinate"
                         value={Math.round((value / maxValue) * 100)}
@@ -213,11 +179,7 @@ export function AuditoriaRealizadaCard({
                             justifyContent: "center",
                         }}
                     >
-                        <Typography
-                            variant="caption"
-                            component="div"
-                            color="black"
-                        >
+                        <Typography variant="caption" component="div" color="black">
                             {`${Math.round((value / maxValue) * 100)}%`}
                         </Typography>
                     </Box>
@@ -231,7 +193,14 @@ export function AuditoriaRealizadaCard({
                         pt: 1,
                     }}
                 >
-                    <Typography variant="caption" color="black" align="center">
+                    <Typography
+                        variant="caption"
+                        color="black"
+                        align="center"
+                        sx={{
+                            height: "40px"
+                        }}
+                    >
                         {label}
                     </Typography>
                     <Typography variant="caption" color="black" align="center">
@@ -259,10 +228,8 @@ export function AuditoriaRealizadaCard({
                     >
                         <Alert
                             severity="info"
-                            icon={
-                                <CircularProgress color="inherit" size={24} />
-                            }
-                            sx={{ width: "100%" }}
+                            icon={<CircularProgress color="inherit" size={24}/>}
+                            sx={{width: "100%"}}
                         >
                             Cargando...
                         </Alert>
@@ -270,7 +237,7 @@ export function AuditoriaRealizadaCard({
                 </>
             ) : (
                 <>
-                    {auditoria && subarea ? (
+                    {evaluacion ? (
                         <>
                             <Dialog
                                 open={openDialog}
@@ -279,38 +246,22 @@ export function AuditoriaRealizadaCard({
                                 aria-describedby="alert-dialog-description"
                             >
                                 <DialogTitle id="alert-dialog-title">
-                                    {
-                                        "¿Desea eliminar esta auditoría realizada?"
-                                    }
+                                    {"¿Desea eliminar esta auditoría realizada?"}
                                 </DialogTitle>
                                 <DialogContent>
                                     <DialogContentText id="alert-dialog-description">
-                                        Esta auditoría{" "}
-                                        <b>({auditoria?.nombre})</b> realizada
-                                        el día{" "}
-                                        <b>
-                                            {stringToLocalDateTime(
-                                                auditoriaRealizada.fecha
-                                            )}
-                                        </b>
-                                        , no está sincronizada con el servidor y
-                                        será eliminada de forma permanente
-                                        <br />
-                                        <br />
+                                        Esta auditoría <b>({evaluacion.descripcion})</b> realizada el día
+                                        <b>{stringToLocalDateTime(auditoriaRealizada.fecha)}</b>,
+                                        no está sincronizada con el servidor y será eliminada de forma permanente,
+                                        lo que implicará que no podrá ser recuperada.
+                                        <br/>
+                                        <br/>
                                         ¿Desea continuar?
                                     </DialogContentText>
                                 </DialogContent>
                                 <DialogActions>
-                                    <Button onClick={handleCloseDialog}>
-                                        Cancelar
-                                    </Button>
-                                    <Button
-                                        onClick={() =>
-                                            deleteAuditoriaRealizada(
-                                                auditoriaRealizada.id
-                                            )
-                                        }
-                                    >
+                                    <Button onClick={handleCloseDialog}>Cancelar</Button>
+                                    <Button onClick={() => deleteAuditoriaRealizada(auditoriaRealizada.id)}>
                                         Continuar
                                     </Button>
                                 </DialogActions>
@@ -324,71 +275,35 @@ export function AuditoriaRealizadaCard({
                                     overflow: "visible",
                                 }}
                             >
-                                <CardHeader
-                                    title={auditoria.nombre}
-                                    sx={{ py: 1 }}
-                                />
-                                <CardContent sx={{ py: 1 }}>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        sx={{ mb: 1 }}
-                                    >
+                                <CardHeader title={evaluacion.nombre} sx={{py: 1}}/>
+                                <CardContent sx={{py: 1}}>
+                                    <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
                                         <b>Aplicada por: </b>
-                                        {getRealizador()}
+                                        {auditoriaRealizada.realizador}
                                     </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        sx={{ mb: 1 }}
-                                    >
+                                    <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
                                         <b>Fecha de realización: </b>
-                                        {stringToLocalDateTime(
-                                            auditoriaRealizada.fecha
-                                        )}
+                                        {stringToLocalDateTime(auditoriaRealizada.fecha)}
                                     </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        sx={{ mb: 1 }}
-                                    >
+                                    <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
                                         <b>Descripción: </b>
-                                        {auditoria.descripcion}
+                                        {evaluacion.descripcion}
                                     </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        sx={{ mb: 1 }}
-                                    >
+                                    <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
                                         <b>Tipo: </b>
-                                        {auditoria.tipo}
+                                        {evaluacion.tipo}
                                     </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        sx={{ mb: 1 }}
-                                    >
+                                    <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
                                         <b>Categoría: </b>
-                                        {auditoria.categoria
-                                            ? auditoria.categoria
-                                            : "N/A"}
+                                        {evaluacion.categoria || "N/A"}
                                     </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        sx={{ mb: 1 }}
-                                    >
+                                    <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
                                         <b>Subárea: </b>
-                                        {subarea ? subarea.nombre : "N/A"}
+                                        {auditoriaRealizada.subarea || "N/A"}
                                     </Typography>
                                     <Stack
                                         direction="row"
-                                        divider={
-                                            <Divider
-                                                orientation="vertical"
-                                                flexItem
-                                            />
-                                        }
+                                        divider={<Divider orientation="vertical" flexItem/>}
                                         spacing={2}
                                         sx={{
                                             display: "flex",
@@ -399,25 +314,19 @@ export function AuditoriaRealizadaCard({
                                         <CircularProgressWithLabel
                                             label="Cumple"
                                             value={nRespuestasSi}
-                                            maxValue={
-                                                nPreguntas - nRespuestasNA
-                                            }
+                                            maxValue={nPreguntas - nRespuestasNA}
                                             color="success"
                                         />
                                         <CircularProgressWithLabel
                                             label="No cumple"
                                             value={nRespuestasNo}
-                                            maxValue={
-                                                nPreguntas - nRespuestasNA
-                                            }
+                                            maxValue={nPreguntas - nRespuestasNA}
                                             color="error"
                                         />
                                         <CircularProgressWithLabel
                                             label="Corección"
                                             value={nRespuestasNC}
-                                            maxValue={
-                                                nPreguntas - nRespuestasNA
-                                            }
+                                            maxValue={nPreguntas - nRespuestasNA}
                                             color="warning"
                                         />
                                         <CircularProgressWithLabel
@@ -440,14 +349,14 @@ export function AuditoriaRealizadaCard({
                                             variant="contained"
                                             color="error"
                                             alt="Eliminar"
-                                            startIcon={<DeleteIcon />}
+                                            startIcon={<DeleteIcon/>}
                                             onClick={handleOpenDialog}
                                         >
                                             Eliminar
                                         </Button>
                                     )}
                                     {syncing ? (
-                                        <CircularProgress size={24} />
+                                        <CircularProgress size={24}/>
                                     ) : (
                                         <>
                                             {sync ? (
@@ -456,7 +365,7 @@ export function AuditoriaRealizadaCard({
                                                     variant="text"
                                                     color="success"
                                                 >
-                                                    <CloudDoneIcon />
+                                                    <CloudDoneIcon/>
                                                 </Button>
                                             ) : (
                                                 <Button
@@ -464,9 +373,7 @@ export function AuditoriaRealizadaCard({
                                                     variant="contained"
                                                     color="warning"
                                                     alt="Sincronizar"
-                                                    startIcon={
-                                                        <CloudSyncIcon />
-                                                    }
+                                                    startIcon={<CloudSyncIcon/>}
                                                     onClick={syncAuditoria}
                                                     disabled={!navigator.onLine}
                                                 >
@@ -475,14 +382,12 @@ export function AuditoriaRealizadaCard({
                                             )}
                                         </>
                                     )}
-                                    <Link
-                                        to={`/auditoria/realizada/ver/${auditoriaRealizada.id}`}
-                                    >
+                                    <Link to={`/auditoria/realizada/ver/${auditoriaRealizada.id}`}>
                                         <Button
                                             size="small"
                                             variant="contained"
                                             alt="Ver"
-                                            startIcon={<VisibilityIcon />}
+                                            startIcon={<VisibilityIcon/>}
                                             sx={{
                                                 backgroundColor: "#59185E",
                                             }}
@@ -506,11 +411,9 @@ export function AuditoriaRealizadaCard({
                                 }}
                             >
                                 <Alert severity="warning">
-                                    La auditoría realizada{" "}
-                                    <strong>ID: {auditoriaRealizada.id}</strong>{" "}
-                                    no se encuentra en la base de datos o esta
-                                    deshabilitada
-                                    <br />
+                                    La auditoría realizada <strong>ID: {auditoriaRealizada.id}</strong> no se encuentra
+                                    en la base de datos o esta deshabilitada
+                                    <br/>
                                     <em>
                                         <strong>ID servidor: </strong>
                                         {auditoriaRealizada.auditoria_id}

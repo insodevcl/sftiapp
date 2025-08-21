@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
+import {useState, useEffect} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
+import {useForm} from 'react-hook-form';
+import {toast} from 'react-toastify';
 import {
     Backdrop,
     CircularProgress,
@@ -21,49 +21,104 @@ import {
     InputLabel,
     Select,
     ListSubheader,
-    Autocomplete,
     MenuItem,
     Alert,
     Divider,
     ButtonGroup,
-    Paper,
-} from "@mui/material";
-import { LoadingButton } from "@mui/lab";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CancelIcon from "@mui/icons-material/Cancel";
-import SaveIcon from "@mui/icons-material/Save";
+    Paper, Autocomplete,
+} from '@mui/material';
+import {LoadingButton} from '@mui/lab';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CancelIcon from '@mui/icons-material/Cancel';
+import SaveIcon from '@mui/icons-material/Save';
 import {
-    getStorageConfig,
-    getStorageData,
-    updateSyncAuditoria,
-} from "../functions/functions";
-import { Pregunta } from "../components/Pregunta";
-import { Tarea } from "../components/Tarea";
-import { apiAuditoria } from "../functions/api";
+    getContratistaFromStorage,
+    getFaenaFromStorage, getHerramientaFromStorage, getLugarFromStorage,
+    getConfigFromStorage, getSubAreaFromStorage,
+    getSucursalFromStorage, getTrabajadorFromStorage,
+    updateSyncAuditoria, getEvaluacionFromStorage, getRealizadorFromConfig, getPreguntaForEvaluacionFromStorage
+} from '../functions/functions';
+import {EvaluacionPregunta} from '../components/EvaluacionPregunta';
+import {TareaCard} from '../components/TareaCard';
+import {apiAuditoriaPost} from '../functions/api';
 
 export function NewAuditoriaPage() {
-    const { id } = useParams();
-    const [auditoria, setAuditoria] = useState({});
+    const {id} = useParams();
+    const evaluacion = getEvaluacionFromStorage(id);
+    const realizador = getRealizadorFromConfig();
+    const [sucursales, setSucursales] = useState([]);
+    const [faenas, setFaenas] = useState([]);
+    const [lugares, setLugares] = useState([]);
+    const [areas, setAreas] = useState([]);
+    const [trabajadores, setTrabajadores] = useState([]);
+    const [herramientas, setHerramientas] = useState([]);
+    const [equipos, setEquipos] = useState([]);
+    const [maquinarias, setMaquinarias] = useState([]);
+    const [transportes, setTransporte] = useState([]);
+    const [instalaciones, setInstalaciones] = useState([]);
+    const [equipos_emergencia, setEquiposEmergencia] = useState([]);
+    const [contratistas, setContratistas] = useState([]);
     const [respuestas, setRespuestas] = useState([]);
     const [tareas, setTareas] = useState([]);
     const [openLoading, setOpenLoading] = useState(true);
     const [openDialog, setOpenDialog] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const navigate = useNavigate();
-    const storageConfig = getStorageConfig();
-    const storageData = getStorageData();
     const [nPreguntas, setNPreguntas] = useState(0);
     const [nRespuestas, setNRespuestas] = useState(0);
+    const navigate = useNavigate();
+    const storageConfig = getConfigFromStorage();
     const {
         register,
         handleSubmit,
-        formState: { errors },
-    } = useForm();
+        setValue,
+        formState: {errors},
+    } = useForm({
+            defaultValues: {
+                sucursal_id: null,
+                faena_id: null,
+                subarea_id: null,
+                lugar_id: null,
+                contratista_id: null,
+                trabajador_id: null,
+                herramienta_id: null,
+                equipo_id: null,
+                maquinaria_id: null,
+                transporte_id: null,
+                instalacion_id: null,
+                equipo_emergencia_id: null,
+                operador_id: null,
+            }
+        }
+    );
 
     useEffect(() => {
-        document.title = "Nueva Auditoría";
+        document.title = 'Nueva Auditoría';
         window.scrollTo(0, 0);
-        setAuditoria(storageData.auditorias.find((x) => x.id === parseInt(id)));
+        const storageTrabajadores = JSON.parse(localStorage.getItem('trabajador'));
+        setTrabajadores(storageTrabajadores);
+        const storageSucursales = JSON.parse(localStorage.getItem('sucursal'));
+        setSucursales(storageSucursales);
+        const storageFaenas = JSON.parse(localStorage.getItem('faena'));
+        setFaenas(storageFaenas);
+        const storageLugares = JSON.parse(localStorage.getItem('lugar'));
+        setLugares(storageLugares);
+        const storageAreas = JSON.parse(localStorage.getItem('area'));
+        setAreas(storageAreas);
+        const storageHerramientas = JSON.parse(localStorage.getItem('herramienta'));
+        setHerramientas(storageHerramientas);
+        const storageEquipos = JSON.parse(localStorage.getItem('equipo'));
+        setEquipos(storageEquipos);
+        const storageMaquinarias = JSON.parse(localStorage.getItem('maquinaria'));
+        setMaquinarias(storageMaquinarias);
+        const storageTransportes = JSON.parse(localStorage.getItem('transporte'));
+        setTransporte(storageTransportes);
+        const storageInstalaciones = JSON.parse(localStorage.getItem('instalacion'));
+        setInstalaciones(storageInstalaciones);
+        const storageEquiposEmergencia = JSON.parse(localStorage.getItem('equipoEmergencia'));
+        setEquiposEmergencia(storageEquiposEmergencia);
+        const storageContratistas = JSON.parse(localStorage.getItem('contratista'));
+        setContratistas(storageContratistas);
+
         setTimeout(() => {
             setOpenLoading(false);
         }, 3000);
@@ -71,7 +126,7 @@ export function NewAuditoriaPage() {
 
     useEffect(() => {
         countPreguntas();
-    }, [auditoria]);
+    }, [evaluacion]);
 
     useEffect(() => {
         if (nPreguntas === 0) return;
@@ -88,7 +143,7 @@ export function NewAuditoriaPage() {
 
     const countPreguntas = () => {
         let n = 0;
-        auditoria?.grupos?.map((grupo) => {
+        evaluacion.grupos?.map((grupo) => {
             grupo.preguntas?.map((pregunta) => {
                 if (pregunta.tipo_id === 2) {
                     n++;
@@ -118,77 +173,70 @@ export function NewAuditoriaPage() {
             setTimeout(() => {
                 setSubmitting(false);
             }, 1000);
-            return toast.warning(
-                "Por favor, responda todas las preguntas antes de continuar"
-            );
+            return toast.warning('Por favor, responda todas las preguntas antes de continuar');
         }
-        data["id"] = JSON.parse(localStorage.getItem("auditorias")).length + 1;
-        data["fecha"] = new Date().toJSON();
-        data["user_id"] = storageConfig.userID;
-        data["empresa_id"] = storageConfig.empresaID;
-        data["respuestas"] = respuestas;
-        data["tareas"] = tareas;
-        data["auditoria_id"] = auditoria.id;
-        data["sync"] = false;
-        const realizadas = JSON.parse(localStorage.getItem("auditorias"));
-        realizadas.push(data);
-        localStorage.setItem("auditorias", JSON.stringify(realizadas));
-        toast.success("Auditoría guardada");
+        data['id'] = JSON.parse(localStorage.getItem('auditoria')).length + 1;
+        data['user_id'] = storageConfig.userID;
+        data['fecha'] = new Date().toJSON();
+        data['realizador'] = realizador.nombre;
+        data['realizador_id'] = realizador.id;
+        data['sucursal'] = getSucursalFromStorage(data.sucursal_id)?.nombre || null;
+        data['faena'] = getFaenaFromStorage(data.faena_id)?.nombre || null;
+        data['subarea'] = getSubAreaFromStorage(data.subarea_id)?.nombre || null;
+        data['lugar'] = getLugarFromStorage(data.lugar_id)?.nombre || null;
+        data['contratista'] = getContratistaFromStorage(data.contratista_id)?.nombre || null;
+        data['trabajador'] = getTrabajadorFromStorage(data.trabajador_id)?.nombre || null;
+        data['herramienta'] = getHerramientaFromStorage(data.herramienta_id)?.nombre || null;
+        data['equipo'] = getHerramientaFromStorage(data.equipo_id)?.nombre || null;
+        data['maquinaria'] = getHerramientaFromStorage(data.maquinaria_id)?.nombre || null;
+        data['transporte'] = getHerramientaFromStorage(data.transporte_id)?.nombre || null;
+        data['instalacion'] = getHerramientaFromStorage(data.instalacion_id)?.nombre || null;
+        data['equipo_emergencia'] = getHerramientaFromStorage(data.equipo_emergencia_id)?.nombre || null;
+        data['operador'] = getTrabajadorFromStorage(data.operador_id)?.nombre || null;
+        data['empresa_id'] = storageConfig.empresaID;
+        data['respuestas'] = respuestas;
+        data['tareas'] = tareas;
+        data['evaluacion_id'] = evaluacion.id;
+        data['sync'] = false;
+        const storageAuditoria = JSON.parse(localStorage.getItem('auditoria'));
+        storageAuditoria.push(data);
+        localStorage.setItem('auditoria', JSON.stringify(storageAuditoria));
+        toast.success('Auditoría guardada');
         if (navigator.onLine) {
             return syncAuditoria(data);
         } else {
-            return navigate("/");
+            return navigate('/');
         }
     });
 
     const syncAuditoria = async (data) => {
         setOpenLoading(true);
-        await apiAuditoria(storageConfig.server, data).then((response) => {
+        await apiAuditoriaPost(storageConfig.serverUrl, data).then((response) => {
             if (response.status === 200) {
                 updateSyncAuditoria(data.id);
             }
         });
         setTimeout(() => {
             setOpenLoading(false);
-            return navigate("/");
+            return navigate('/');
         }, 1000);
     };
 
-    const getPregunta = (id) => {
-        const pregunta_id = id;
-        let pregunta = { pregunta: "" };
-        auditoria?.grupos?.map((grupo) => {
-            if (grupo.preguntas?.find((x) => x.id === pregunta_id)) {
-                pregunta = grupo.preguntas.find((x) => x.id === pregunta_id);
-            }
-            return null;
-        });
-        return pregunta.pregunta;
-    };
-
-    // const getReference = (id) => {
-    //     const pregunta_id = id;
-    //     let pregunta = { referencia: "" };
-    //     auditoria.grupos?.map((grupo) => {
-    //         if (grupo.preguntas.find((x) => x.id === pregunta_id)) {
-    //             pregunta = grupo.preguntas.find((x) => x.id === pregunta_id);
-    //         }
-    //         return null;
-    //     });
-    //     return pregunta.referencia;
-    // };
-
-    const getRespuesta = (id) => {
-        const r = respuestas.find((x) => x.id === id);
-        if (r) {
-            return r.respuesta;
+    const getPregunta = (pregunta_id) => {
+        const pregunta = getPreguntaForEvaluacionFromStorage(evaluacion.id, pregunta_id);
+        if (pregunta) {
+            return pregunta.pregunta;
         } else {
-            return 0;
+            return 'Pregunta no encontrada';
         }
     };
 
-    const updateRespuestas = (id, respuesta) => {
-        const index = respuestas.findIndex((x) => x.id === id);
+    const getRespuesta = (id) => {
+        return respuestas.find((x) => x.pregunta_id === id)?.respuesta || 0;
+    };
+
+    const updateRespuestas = (pregunta_id, respuesta) => {
+        const index = respuestas.findIndex((x) => x.pregunta_id === pregunta_id);
         if (index > -1) {
             respuestas[index].respuesta = respuesta;
             setRespuestas([...respuestas]);
@@ -196,40 +244,32 @@ export function NewAuditoriaPage() {
             setRespuestas([
                 ...respuestas,
                 {
-                    id: id,
+                    pregunta_id: pregunta_id,
                     respuesta: respuesta,
-                    observacion: "",
+                    observacion: '',
                 },
             ]);
         }
     };
 
-    const updateObservacion = (id, observacion) => {
-        const index = respuestas.findIndex((x) => x.id === id);
+    const updateObservacion = (pregunta_id, observacion) => {
+        const index = respuestas.findIndex((x) => x.pregunta_id === pregunta_id);
         if (index > -1) {
             respuestas[index].observacion = observacion;
             setRespuestas([...respuestas]);
         }
     };
 
-    const removeObservacion = (id) => {
-        const index = respuestas.findIndex((x) => x.id === id);
+    const removeObservacion = (pregunta_id) => {
+        const index = respuestas.findIndex((x) => x.pregunta_id === pregunta_id);
         if (index > -1) {
-            respuestas[index].observacion = "";
+            respuestas[index].observacion = '';
             setRespuestas([...respuestas]);
         }
     };
 
-    const updateTareas = (
-        id,
-        tarea,
-        descripcion,
-        supervisor_id,
-        responsable_id,
-        criticidad_id,
-        fecha_cierre
-    ) => {
-        const index = tareas.findIndex((x) => x.id === id);
+    const updateTareas = (pregunta_id, tarea, descripcion, supervisor_id, responsable_id, criticidad_id, fecha_cierre) => {
+        const index = tareas.findIndex((x) => x.pregunta_id === pregunta_id);
         if (index > -1) {
             tareas[index].tarea = tarea;
             tareas[index].descripcion = descripcion;
@@ -242,7 +282,7 @@ export function NewAuditoriaPage() {
             setTareas([
                 ...tareas,
                 {
-                    id: id,
+                    pregunta_id: pregunta_id,
                     tarea: tarea,
                     descripcion: descripcion,
                     supervisor_id: parseInt(supervisor_id),
@@ -254,8 +294,8 @@ export function NewAuditoriaPage() {
         }
     };
 
-    const removeTarea = (id) => {
-        const index = tareas.findIndex((x) => x.id === id);
+    const removeTarea = (pregunta_id) => {
+        const index = tareas.findIndex((x) => x.pregunta_id === pregunta_id);
         if (index > -1) {
             tareas.splice(index, 1);
             setTareas([...tareas]);
@@ -263,28 +303,28 @@ export function NewAuditoriaPage() {
     };
 
     const handleOption = (event, respuesta) => {
-        const id = parseInt(event.target.parentNode.dataset.id);
-        updateRespuestas(id, respuesta);
+        const pregunta_id = parseInt(event.target.parentNode.dataset.id);
+        updateRespuestas(pregunta_id, respuesta);
         switch (respuesta) {
             case 1:
-                removeObservacion(id);
-                removeTarea(id);
+                removeObservacion(pregunta_id);
+                removeTarea(pregunta_id);
                 break;
             case 2:
-                updateObservacion(id, "");
-                updateTareas(id, "", "", null, null, null, "");
+                updateObservacion(pregunta_id, '');
+                updateTareas(pregunta_id, '', '', null, null, null, '');
                 break;
             case 3:
-                updateObservacion(id, "");
-                removeTarea(id);
+                updateObservacion(pregunta_id, '');
+                removeTarea(pregunta_id);
                 break;
             case 0:
-                updateObservacion(id, "");
-                removeTarea(id);
+                updateObservacion(pregunta_id, '');
+                removeTarea(pregunta_id);
                 break;
             default:
-                removeObservacion(id);
-                removeTarea(id);
+                removeObservacion(pregunta_id);
+                removeTarea(pregunta_id);
                 break;
         }
     };
@@ -334,8 +374,8 @@ export function NewAuditoriaPage() {
             const items = tipo.equipos?.map((equipo) => {
                 return (
                     <MenuItem
-                        value={equipo.id}
                         key={equipo.id}
+                        value={equipo.id}
                         divider={true}
                         sx={{
                             pl: 4,
@@ -368,8 +408,8 @@ export function NewAuditoriaPage() {
             const items = tipo.maquinarias?.map((maquinaria) => {
                 return (
                     <MenuItem
-                        value={maquinaria.id}
                         key={maquinaria.id}
+                        value={maquinaria.id}
                         divider={true}
                         sx={{
                             pl: 4,
@@ -402,8 +442,8 @@ export function NewAuditoriaPage() {
             const items = tipo.transportes?.map((transporte) => {
                 return (
                     <MenuItem
-                        value={transporte.id}
                         key={transporte.id}
+                        value={transporte.id}
                         divider={true}
                         sx={{
                             pl: 4,
@@ -436,8 +476,8 @@ export function NewAuditoriaPage() {
             const items = tipo.equipos_emergencia?.map((equipo) => {
                 return (
                     <MenuItem
-                        value={equipo.id}
                         key={equipo.id}
+                        value={equipo.id}
                         divider={true}
                         sx={{
                             pl: 4,
@@ -470,8 +510,8 @@ export function NewAuditoriaPage() {
             const items = area.subareas?.map((subarea) => {
                 return (
                     <MenuItem
-                        value={subarea.id}
                         key={subarea.id}
+                        value={subarea.id}
                         divider={true}
                         sx={{
                             pl: 4,
@@ -508,17 +548,16 @@ export function NewAuditoriaPage() {
                     name="operador"
                     fullWidth
                     defaultValue={""}
-                    sx={{ mb: 2 }}
+                    sx={{mb: 2}}
                     {...register("operador_id", {
                         required: true,
                     })}
                 >
                     <MenuItem value="">Seleccione un operador</MenuItem>
-                    {/*{storageData.operadores?.map((operador) => (*/}
-                    {storageData.trabajador?.map((operador) => (
+                    {trabajadores.map((operador) => (
                         <MenuItem
-                            value={operador.id}
                             key={operador.id}
+                            value={operador.id}
                             divider={true}
                             sx={{
                                 whiteSpace: "normal",
@@ -528,9 +567,7 @@ export function NewAuditoriaPage() {
                         </MenuItem>
                     ))}
                 </Select>
-                {errors.operador && (
-                    <Alert severity="error">Este campo es requerido</Alert>
-                )}
+                {errors.operador && <Alert severity="error">Este campo es requerido</Alert>}
             </>
         );
     };
@@ -538,7 +575,7 @@ export function NewAuditoriaPage() {
     const renderObservacion = (respuesta) => {
         return (
             <Container
-                key={respuesta.id}
+                key={respuesta.pregunta_id}
                 sx={{
                     mb: 2,
                     p: 2,
@@ -547,14 +584,13 @@ export function NewAuditoriaPage() {
                     borderBottomRightRadius: 2,
                 }}
             >
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                    <b>Cumplimiento:</b>{" "}
-                    {getRespuesta(respuesta.id) === 2 && `No cumple`}
-                    {getRespuesta(respuesta.id) === 3 && `Corrección`}
-                    {getRespuesta(respuesta.id) === 0 && `No Aplica`}
+                <Typography variant="body2" sx={{mb: 2}}>
+                    <b>Cumplimiento:</b> {getRespuesta(respuesta.pregunta_id) === 2 && `No cumple`}
+                    {getRespuesta(respuesta.pregunta_id) === 3 && `Corrección`}
+                    {getRespuesta(respuesta.pregunta_id) === 0 && `No Aplica`}
                 </Typography>
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                    <b>Descripción:</b> {getPregunta(respuesta.id)}
+                <Typography variant="body2" sx={{mb: 2}}>
+                    <b>Descripción:</b> {getPregunta(respuesta.pregunta_id)}
                 </Typography>
                 <TextField
                     label="Observación"
@@ -563,18 +599,18 @@ export function NewAuditoriaPage() {
                     fullWidth
                     onChange={handleObservacion}
                     inputProps={{
-                        "data-id": respuesta.id,
+                        "data-id": respuesta.pregunta_id,
                     }}
-                    sx={{ mb: 2 }}
+                    sx={{mb: 2}}
                 ></TextField>
-                <Divider />
+                <Divider/>
             </Container>
         );
     };
 
     return (
         <>
-            <Box sx={{ flexGrow: 1 }}>
+            <Box sx={{flexGrow: 1}}>
                 <AppBar position="fixed">
                     <Toolbar
                         variant="dense"
@@ -588,15 +624,11 @@ export function NewAuditoriaPage() {
                             color="inherit"
                             aria-label="volver"
                             onClick={handleOpenDialog}
-                            sx={{ mr: 2 }}
+                            sx={{mr: 2}}
                         >
-                            <ArrowBackIcon />
+                            <ArrowBackIcon/>
                         </IconButton>
-                        <Typography
-                            variant="h6"
-                            component="div"
-                            sx={{ flexGrow: 1 }}
-                        >
+                        <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
                             Nueva auditoría
                         </Typography>
                     </Toolbar>
@@ -607,14 +639,12 @@ export function NewAuditoriaPage() {
                     aria-labelledby="alert-dialog-title"
                     aria-describedby="alert-dialog-description"
                 >
-                    <DialogTitle id="alert-dialog-title">
-                        {"¿Desea terminar la auditoría?"}
-                    </DialogTitle>
+                    <DialogTitle id="alert-dialog-title">{"¿Desea terminar la auditoría?"}</DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
                             Los cambios no guardados se perderán.
-                            <br />
-                            <br />
+                            <br/>
+                            <br/>
                             ¿Desea continuar?
                         </DialogContentText>
                     </DialogContent>
@@ -640,7 +670,7 @@ export function NewAuditoriaPage() {
                         backgroundColor: "background.main",
                     }}
                 >
-                    <form onSubmit={onSubmit} style={{ width: "100%" }}>
+                    <form onSubmit={onSubmit} style={{width: "100%"}}>
                         <Paper
                             elevation={3}
                             sx={{
@@ -657,12 +687,8 @@ export function NewAuditoriaPage() {
                                     borderTopRightRadius: 4,
                                 }}
                             >
-                                <Typography
-                                    variant="h6"
-                                    component="div"
-                                    sx={{ color: "white" }}
-                                >
-                                    <b>{auditoria.nombre}</b>
+                                <Typography variant="h6" component="div" sx={{color: "white", fontWeight: "bold"}}>
+                                    {evaluacion.descripcion}
                                 </Typography>
                             </Container>
                             <Container
@@ -670,294 +696,216 @@ export function NewAuditoriaPage() {
                                     p: 2,
                                 }}
                             >
-                                {auditoria.tipo_id === 2 &&
-                                    auditoria.categoria_id === 1 && (
-                                        <>
-                                            <InputLabel id="id_label_trabajador">
-                                                Trabajador
-                                            </InputLabel>
-                                            <Select
-                                                labelId="id_label_trabajador"
-                                                name="trabajador"
-                                                required
-                                                fullWidth
-                                                defaultValue={""}
-                                                sx={{ mb: 2 }}
-                                                {...register("trabajador_id", {
-                                                    required: true,
-                                                })}
-                                            >
-                                                <MenuItem value="">
-                                                    Seleccione un trabajador
-                                                </MenuItem>
-                                                {storageData.trabajadores?.map(
-                                                    (trabajador) => (
-                                                        <MenuItem
-                                                            value={
-                                                                trabajador.id
-                                                            }
-                                                            key={trabajador.id}
-                                                            divider={true}
-                                                            sx={{
-                                                                whiteSpace:
-                                                                    "normal",
-                                                            }}
-                                                        >
-                                                            {trabajador.nombre}
-                                                        </MenuItem>
-                                                    )
-                                                )}
-                                            </Select>
-                                        </>
-                                    )}
-                                {auditoria.tipo_id === 2 &&
-                                    auditoria.categoria_id === 2 && (
-                                        <>
-                                            <InputLabel id="id_label_maquinaria">
-                                                Maquinaria
-                                            </InputLabel>
-                                            <Select
-                                                labelId="id_label_maquinaria"
-                                                name="maquinaria"
-                                                required
-                                                fullWidth
-                                                defaultValue={""}
-                                                sx={{ mb: 2 }}
-                                                {...register("maquinaria_id", {
-                                                    required: true,
-                                                })}
-                                            >
-                                                <MenuItem value="">
-                                                    Seleccione una maquinaria
-                                                </MenuItem>
-                                                {storageData.maquinarias?.map(
-                                                    (tipo) =>
-                                                        renderSelectMaquinaria(
-                                                            tipo
-                                                        )
-                                                )}
-                                            </Select>
-                                            {renderOperador()}
-                                        </>
-                                    )}
-                                {auditoria.tipo_id === 2 &&
-                                    auditoria.categoria_id === 3 && (
-                                        <>
-                                            <InputLabel id="id_label_herramienta">
-                                                Herramienta
-                                            </InputLabel>
-                                            <Select
-                                                labelId="id_label_herramienta"
-                                                name="herramienta"
-                                                required
-                                                fullWidth
-                                                defaultValue={""}
-                                                sx={{ mb: 2 }}
-                                                {...register("herramienta_id", {
-                                                    required: true,
-                                                })}
-                                            >
-                                                <MenuItem value="">
-                                                    Seleccione una herramienta
-                                                </MenuItem>
-                                                {storageData.herramientas?.map(
-                                                    (tipo) =>
-                                                        renderSelectHerramienta(
-                                                            tipo
-                                                        )
-                                                )}
-                                            </Select>
-                                            {renderOperador()}
-                                        </>
-                                    )}
-                                {auditoria.tipo_id === 2 &&
-                                    auditoria.categoria_id === 4 && (
-                                        <>
-                                            <InputLabel id="id_label_equipo">
-                                                Equipo
-                                            </InputLabel>
-                                            <Select
-                                                labelId="id_label_equipo"
-                                                name="equipo"
-                                                required
-                                                fullWidth
-                                                defaultValue={""}
-                                                sx={{ mb: 2 }}
-                                                {...register("equipo_id", {
-                                                    required: true,
-                                                })}
-                                            >
-                                                <MenuItem value="">
-                                                    Seleccione un equipo
-                                                </MenuItem>
-                                                {storageData.equipos?.map(
-                                                    (tipo) =>
-                                                        renderSelectEquipo(tipo)
-                                                )}
-                                            </Select>
-                                            {renderOperador()}
-                                        </>
-                                    )}
-                                {auditoria.tipo_id === 2 &&
-                                    auditoria.categoria_id === 5 && (
-                                        <>
-                                            <InputLabel id="id_label_instalacion">
-                                                Instalación
-                                            </InputLabel>
-                                            <Select
-                                                labelId="id_label_instalacion"
-                                                name="instalacion"
-                                                required
-                                                fullWidth
-                                                defaultValue={""}
-                                                sx={{ mb: 2 }}
-                                                {...register("instalacion_id", {
-                                                    required: true,
-                                                })}
-                                            >
-                                                <MenuItem value="">
-                                                    Seleccione una instalación
-                                                </MenuItem>
-                                                {storageData.instalaciones?.map(
-                                                    (instalacion) => (
-                                                        <MenuItem
-                                                            value={
-                                                                instalacion.id
-                                                            }
-                                                            key={instalacion.id}
-                                                            divider={true}
-                                                            sx={{
-                                                                whiteSpace:
-                                                                    "normal",
-                                                            }}
-                                                        >
-                                                            {instalacion.nombre}
-                                                        </MenuItem>
-                                                    )
-                                                )}
-                                            </Select>
-                                        </>
-                                    )}
-                                {auditoria.tipo_id === 2 &&
-                                    auditoria.categoria_id === 6 && (
-                                        <>
-                                            <InputLabel id="id_label_transporte">
-                                                Transporte
-                                            </InputLabel>
-                                            <Select
-                                                labelId="id_label_transporte"
-                                                name="transporte"
-                                                required
-                                                fullWidth
-                                                defaultValue={""}
-                                                sx={{ mb: 2 }}
-                                                {...register("transporte_id", {
-                                                    required: true,
-                                                })}
-                                            >
-                                                <MenuItem value="">
-                                                    Seleccione un transporte
-                                                </MenuItem>
-                                                {storageData.transportes?.map(
-                                                    (tipo) =>
-                                                        renderSelectTransporte(
-                                                            tipo
-                                                        )
-                                                )}
-                                            </Select>
-                                            {renderOperador()}
-                                        </>
-                                    )}
-                                {auditoria.tipo_id === 2 &&
-                                    auditoria.categoria_id === 7 && (
-                                        <>
-                                            <InputLabel id="id_label_equipo_emergencia">
-                                                Equipo de emergencia
-                                            </InputLabel>
-                                            <Select
-                                                labelId="id_label_equipo_emergencia"
-                                                name="equipo_emergencia"
-                                                required
-                                                fullWidth
-                                                defaultValue={""}
-                                                sx={{ mb: 2 }}
-                                                {...register(
-                                                    "equipo_emergencia_id",
-                                                    {
-                                                        required: true,
-                                                    }
-                                                )}
-                                            >
-                                                <MenuItem value="">
-                                                    Seleccione un equipo de
-                                                    emergencia
-                                                </MenuItem>
-                                                {storageData.equipos_emergencia?.map(
-                                                    (tipo) =>
-                                                        renderSelectEquipoEmergencia(
-                                                            tipo
-                                                        )
-                                                )}
-                                            </Select>
-                                        </>
-                                    )}
-                                {auditoria.tipo_id === 3 && (
+                                {evaluacion.tipo_id === 2 && evaluacion.categoria_id === 1 && (
                                     <>
-                                        <InputLabel id="id_label_sucursal">
-                                            Sucursal
-                                        </InputLabel>
+                                        <InputLabel id="id_label_trabajador">Trabajador</InputLabel>
+                                        <Autocomplete
+                                            options={trabajadores}
+                                            getOptionLabel={(option) => option.nombre}
+                                            renderOption={(props, option) => (
+                                                <li {...props}
+                                                    key={option.id}
+                                                    style={{borderBottom: "1px solid #e0e0e0"}}>
+                                                    {option.nombre}
+                                                </li>
+                                            )}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label="Seleccione un trabajador"
+                                                    variant="outlined"
+                                                    required
+                                                />
+                                            )}
+                                            onChange={(_, value) => {
+                                                if (value) {
+                                                    setValue("trabajador_id", value.id);
+                                                }
+                                            }}
+                                            sx={{
+                                                mb: 2,
+                                            }}
+                                        />
+                                    </>
+                                )}
+                                {evaluacion.tipo_id === 2 && evaluacion.categoria_id === 2 && (
+                                    <>
+                                        <InputLabel id="id_label_maquinaria">Maquinaria</InputLabel>
+                                        <Select
+                                            labelId="id_label_maquinaria"
+                                            name="maquinaria"
+                                            required
+                                            fullWidth
+                                            defaultValue={""}
+                                            sx={{mb: 2}}
+                                            {...register("maquinaria_id", {
+                                                required: true,
+                                            })}
+                                        >
+                                            <MenuItem value="">Seleccione una maquinaria</MenuItem>
+                                            {maquinarias.map((tipo) => renderSelectMaquinaria(tipo))}
+                                        </Select>
+                                        {renderOperador()}
+                                    </>
+                                )}
+                                {evaluacion.tipo_id === 2 && evaluacion.categoria_id === 3 && (
+                                    <>
+                                        <InputLabel id="id_label_herramienta">Herramienta</InputLabel>
+                                        <Select
+                                            labelId="id_label_herramienta"
+                                            name="herramienta"
+                                            required
+                                            fullWidth
+                                            defaultValue={""}
+                                            sx={{mb: 2}}
+                                            {...register("herramienta_id", {
+                                                required: true,
+                                            })}
+                                        >
+                                            <MenuItem value="">Seleccione una herramienta</MenuItem>
+                                            {herramientas.map((tipo) => renderSelectHerramienta(tipo))}
+                                        </Select>
+                                        {renderOperador()}
+                                    </>
+                                )}
+                                {evaluacion.tipo_id === 2 && evaluacion.categoria_id === 4 && (
+                                    <>
+                                        <InputLabel id="id_label_equipo">Equipo</InputLabel>
+                                        <Select
+                                            labelId="id_label_equipo"
+                                            name="equipo"
+                                            required
+                                            fullWidth
+                                            defaultValue={""}
+                                            sx={{mb: 2}}
+                                            {...register("equipo_id", {
+                                                required: true,
+                                            })}
+                                        >
+                                            <MenuItem value="">Seleccione un equipo</MenuItem>
+                                            {equipos.map((tipo) => renderSelectEquipo(tipo))}
+                                        </Select>
+                                        {renderOperador()}
+                                    </>
+                                )}
+                                {evaluacion.tipo_id === 2 && evaluacion.categoria_id === 5 && (
+                                    <>
+                                        <InputLabel id="id_label_instalacion">Instalación</InputLabel>
+                                        <Select
+                                            labelId="id_label_instalacion"
+                                            name="instalacion"
+                                            required
+                                            fullWidth
+                                            defaultValue={""}
+                                            sx={{mb: 2}}
+                                            {...register("instalacion_id", {
+                                                required: true,
+                                            })}
+                                        >
+                                            <MenuItem value="">Seleccione una instalación</MenuItem>
+                                            {instalaciones.map((instalacion) => (
+                                                <MenuItem
+                                                    value={instalacion.id}
+                                                    key={instalacion.id}
+                                                    divider={true}
+                                                    sx={{
+                                                        whiteSpace: "normal",
+                                                    }}
+                                                >
+                                                    {instalacion.nombre}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </>
+                                )}
+                                {evaluacion.tipo_id === 2 && evaluacion.categoria_id === 6 && (
+                                    <>
+                                        <InputLabel id="id_label_transporte">Transporte</InputLabel>
+                                        <Select
+                                            labelId="id_label_transporte"
+                                            name="transporte"
+                                            required
+                                            fullWidth
+                                            defaultValue={""}
+                                            sx={{mb: 2}}
+                                            {...register("transporte_id", {
+                                                required: true,
+                                            })}
+                                        >
+                                            <MenuItem value="">Seleccione un transporte</MenuItem>
+                                            {transportes.map((tipo) => renderSelectTransporte(tipo))}
+                                        </Select>
+                                        {renderOperador()}
+                                    </>
+                                )}
+                                {evaluacion.tipo_id === 2 && evaluacion.categoria_id === 7 && (
+                                    <>
+                                        <InputLabel id="id_label_equipo_emergencia">Equipo de
+                                            emergencia</InputLabel>
+                                        <Select
+                                            labelId="id_label_equipo_emergencia"
+                                            name="equipo_emergencia"
+                                            required
+                                            fullWidth
+                                            defaultValue={""}
+                                            sx={{mb: 2}}
+                                            {...register("equipo_emergencia_id", {
+                                                required: true,
+                                            })}
+                                        >
+                                            <MenuItem value="">Seleccione un equipo de emergencia</MenuItem>
+                                            {equipos_emergencia.map((tipo) =>
+                                                renderSelectEquipoEmergencia(tipo)
+                                            )}
+                                        </Select>
+                                    </>
+                                )}
+                                {evaluacion.tipo_id === 3 && (
+                                    <>
+                                        <InputLabel id="id_label_sucursal">Sucursal</InputLabel>
                                         <Select
                                             labelId="id_label_sucursal"
                                             name="sucursal"
                                             required
                                             fullWidth
                                             defaultValue={""}
-                                            sx={{ mb: 2 }}
+                                            sx={{mb: 2}}
                                             {...register("sucursal_id", {
                                                 required: true,
                                             })}
                                         >
-                                            <MenuItem value="">
-                                                Seleccione una sucursal
-                                            </MenuItem>
-                                            {storageData.sucursales?.map(
-                                                (sucursal) => (
-                                                    <MenuItem
-                                                        value={sucursal.id}
-                                                        key={sucursal.id}
-                                                        divider={true}
-                                                        sx={{
-                                                            whiteSpace:
-                                                                "normal",
-                                                        }}
-                                                    >
-                                                        {sucursal.nombre}
-                                                    </MenuItem>
-                                                )
-                                            )}
+                                            <MenuItem value="">Seleccione una sucursal</MenuItem>
+                                            {sucursales.map((sucursal) => (
+                                                <MenuItem
+                                                    value={sucursal.id}
+                                                    key={sucursal.id}
+                                                    divider={true}
+                                                    sx={{
+                                                        whiteSpace: "normal",
+                                                    }}
+                                                >
+                                                    {sucursal.nombre}
+                                                </MenuItem>
+                                            ))}
                                         </Select>
                                     </>
                                 )}
-                                {auditoria.tipo_id === 4 && (
+                                {evaluacion.tipo_id === 4 && (
                                     <>
-                                        <InputLabel id="id_label_faena">
-                                            Faena
-                                        </InputLabel>
+                                        <InputLabel id="id_label_faena">Faena</InputLabel>
                                         <Select
                                             labelId="id_label_faena"
                                             name="faena"
                                             required
                                             fullWidth
                                             defaultValue={""}
-                                            sx={{ mb: 2 }}
+                                            sx={{mb: 2}}
                                             {...register("faena_id", {
                                                 required: true,
                                             })}
                                         >
-                                            <MenuItem value="">
-                                                Seleccione una faena
-                                            </MenuItem>
-                                            {storageData.faenas?.map((faena) => (
+                                            <MenuItem value="">Seleccione una faena</MenuItem>
+                                            {faenas.map((faena) => (
                                                 <MenuItem
                                                     value={faena.id}
                                                     key={faena.id}
@@ -972,86 +920,68 @@ export function NewAuditoriaPage() {
                                         </Select>
                                     </>
                                 )}
-                                {auditoria.tipo_id === 5 && (
+                                {evaluacion.tipo_id === 5 && (
                                     <>
-                                        <InputLabel id="id_label_contratista">
-                                            Contratista
-                                        </InputLabel>
+                                        <InputLabel id="id_label_contratista">Contratista</InputLabel>
                                         <Select
                                             labelId="id_label_contratista"
                                             name="contratista"
                                             required
                                             fullWidth
                                             defaultValue={""}
-                                            sx={{ mb: 2 }}
+                                            sx={{mb: 2}}
                                             {...register("contratista_id", {
                                                 required: true,
                                             })}
                                         >
-                                            <MenuItem value="">
-                                                Seleccione un contratista
-                                            </MenuItem>
-                                            {storageData.contratistas?.map(
-                                                (contratista) => (
-                                                    <MenuItem
-                                                        value={contratista.id}
-                                                        key={contratista.id}
-                                                        divider={true}
-                                                        sx={{
-                                                            whiteSpace:
-                                                                "normal",
-                                                        }}
-                                                    >
-                                                        {contratista.nombre}
-                                                    </MenuItem>
-                                                )
-                                            )}
+                                            <MenuItem value="">Seleccione un contratista</MenuItem>
+                                            {contratistas.map((contratista) => (
+                                                <MenuItem
+                                                    value={contratista.id}
+                                                    key={contratista.id}
+                                                    divider={true}
+                                                    sx={{
+                                                        whiteSpace: "normal",
+                                                    }}
+                                                >
+                                                    {contratista.nombre}
+                                                </MenuItem>
+                                            ))}
                                         </Select>
-                                        <InputLabel id="id_label_sucursal">
-                                            Sucursal (opcional)
-                                        </InputLabel>
+                                        <InputLabel id="id_label_sucursal">Sucursal (opcional)</InputLabel>
                                         <Select
                                             labelId="id_label_sucursal"
                                             name="sucursal"
                                             fullWidth
                                             defaultValue={""}
-                                            sx={{ mb: 2 }}
+                                            sx={{mb: 2}}
                                             {...register("sucursal_id")}
                                         >
-                                            <MenuItem value="">
-                                                Seleccione una sucursal
-                                            </MenuItem>
-                                            {storageData.sucursales?.map(
-                                                (sucursal) => (
-                                                    <MenuItem
-                                                        value={sucursal.id}
-                                                        key={sucursal.id}
-                                                        divider={true}
-                                                        sx={{
-                                                            whiteSpace:
-                                                                "normal",
-                                                        }}
-                                                    >
-                                                        {sucursal.nombre}
-                                                    </MenuItem>
-                                                )
-                                            )}
+                                            <MenuItem value="">Seleccione una sucursal</MenuItem>
+                                            {sucursales.map((sucursal) => (
+                                                <MenuItem
+                                                    value={sucursal.id}
+                                                    key={sucursal.id}
+                                                    divider={true}
+                                                    sx={{
+                                                        whiteSpace: "normal",
+                                                    }}
+                                                >
+                                                    {sucursal.nombre}
+                                                </MenuItem>
+                                            ))}
                                         </Select>
-                                        <InputLabel id="id_label_faena">
-                                            Faena (opcional)
-                                        </InputLabel>
+                                        <InputLabel id="id_label_faena">Faena (opcional)</InputLabel>
                                         <Select
                                             labelId="id_label_faena"
                                             name="faena"
                                             fullWidth
                                             defaultValue={""}
-                                            sx={{ mb: 2 }}
+                                            sx={{mb: 2}}
                                             {...register("faena_id")}
                                         >
-                                            <MenuItem value="">
-                                                Seleccione una faena
-                                            </MenuItem>
-                                            {storageData.faenas?.map((faena) => (
+                                            <MenuItem value="">Seleccione una faena</MenuItem>
+                                            {faenas.map((faena) => (
                                                 <MenuItem
                                                     value={faena.id}
                                                     key={faena.id}
@@ -1066,42 +996,32 @@ export function NewAuditoriaPage() {
                                         </Select>
                                     </>
                                 )}
-                                <InputLabel id="id_label_subarea">
-                                    Subárea
-                                </InputLabel>
+                                <InputLabel id="id_label_subarea">Subárea</InputLabel>
                                 <Select
                                     labelId="id_label_subarea"
                                     name="subarea"
                                     required
                                     fullWidth
                                     defaultValue={""}
-                                    sx={{ mb: 2 }}
+                                    sx={{mb: 2}}
                                     {...register("subarea_id", {
                                         required: true,
                                     })}
                                 >
-                                    <MenuItem value="">
-                                        Seleccione una subárea
-                                    </MenuItem>
-                                    {storageData.areas?.map((area) =>
-                                        renderSubarea(area)
-                                    )}
+                                    <MenuItem value="">Seleccione una subárea</MenuItem>
+                                    {areas.map((area) => renderSubarea(area))}
                                 </Select>
-                                <InputLabel id="id_label_lugar">
-                                    Lugar (opcional)
-                                </InputLabel>
+                                <InputLabel id="id_label_lugar">Lugar (opcional)</InputLabel>
                                 <Select
                                     labelId="id_label_lugar"
                                     name="lugar"
                                     fullWidth
                                     defaultValue={""}
-                                    sx={{ mb: 2 }}
+                                    sx={{mb: 2}}
                                     {...register("lugar_id")}
                                 >
-                                    <MenuItem value="">
-                                        Seleccione un lugar
-                                    </MenuItem>
-                                    {storageData.lugares?.map((lugar) => (
+                                    <MenuItem value="">Seleccione un lugar</MenuItem>
+                                    {lugares?.map((lugar) => (
                                         <MenuItem
                                             value={lugar.id}
                                             key={lugar.id}
@@ -1116,7 +1036,7 @@ export function NewAuditoriaPage() {
                                 </Select>
                             </Container>
                         </Paper>
-                        {auditoria?.grupos?.map((grupo) => (
+                        {evaluacion.grupos?.map((grupo) => (
                             <Paper
                                 key={grupo.id}
                                 sx={{
@@ -1136,16 +1056,16 @@ export function NewAuditoriaPage() {
                                     <Typography
                                         variant="h6"
                                         component="div"
-                                        sx={{ color: "white" }}
-                                    >
-                                        {grupo.nombre}
-                                    </Typography>
+                                        sx={{
+                                            color: "white"
+                                        }}
+                                    >{grupo.nombre}</Typography>
                                 </Container>
-                                {grupo?.preguntas?.map((pregunta) => (
-                                    <Pregunta
+                                {grupo.preguntas?.map((pregunta) => (
+                                    <EvaluacionPregunta
+                                        key={pregunta.id}
                                         pregunta={pregunta}
                                         handleOption={handleOption}
-                                        key={pregunta.id}
                                     />
                                 ))}
                             </Paper>
@@ -1166,12 +1086,8 @@ export function NewAuditoriaPage() {
                                     borderTopRightRadius: 4,
                                 }}
                             >
-                                <Typography
-                                    variant="h6"
-                                    component="div"
-                                    sx={{ color: "white" }}
-                                >
-                                    <b>Observaciones</b>
+                                <Typography variant="h6" component="div" sx={{color: "white", fontWeight: "bold"}}>
+                                    Observaciones
                                 </Typography>
                             </Container>
                             <Container
@@ -1204,27 +1120,18 @@ export function NewAuditoriaPage() {
                                     borderTopRightRadius: 4,
                                 }}
                             >
-                                <Typography
-                                    variant="h6"
-                                    component="div"
-                                    sx={{ color: "white" }}
-                                >
-                                    <b>Observaciones por pregunta</b>
+                                <Typography variant="h6" component="div" sx={{color: "white", fontWeight: "bold"}}>
+                                    Observaciones por pregunta
                                 </Typography>
                             </Container>
-                            {respuestas.filter((x) => x.respuesta !== 1)
-                                .length === 0 ? (
+                            {respuestas.filter((x) => x.respuesta !== 1).length === 0 ? (
                                 <Container
                                     sx={{
                                         textAlign: "center",
                                         p: 2,
                                     }}
                                 >
-                                    <Typography
-                                        variant="body1"
-                                        component="div"
-                                        sx={{ color: "black" }}
-                                    >
+                                    <Typography variant="body1" component="div" sx={{color: "black"}}>
                                         No se registran observaciones
                                     </Typography>
                                 </Container>
@@ -1232,9 +1139,7 @@ export function NewAuditoriaPage() {
                                 <>
                                     {respuestas
                                         .filter((x) => x.respuesta !== 1)
-                                        .map((respuesta) =>
-                                            renderObservacion(respuesta)
-                                        )}
+                                        .map((respuesta) => renderObservacion(respuesta))}
                                 </>
                             )}
                         </Paper>
@@ -1257,9 +1162,12 @@ export function NewAuditoriaPage() {
                                 <Typography
                                     variant="h6"
                                     component="div"
-                                    sx={{ color: "white" }}
+                                    sx={{
+                                        color: "white",
+                                        fontWeight: "bold"
+                                    }}
                                 >
-                                    <b>Asignación de tareas</b>
+                                    Asignación de tareas
                                 </Typography>
                             </Container>
                             {tareas.length === 0 ? (
@@ -1272,7 +1180,9 @@ export function NewAuditoriaPage() {
                                     <Typography
                                         variant="body1"
                                         component="div"
-                                        sx={{ color: "black" }}
+                                        sx={{
+                                            color: "black"
+                                        }}
                                     >
                                         No se registran tareas
                                     </Typography>
@@ -1280,17 +1190,17 @@ export function NewAuditoriaPage() {
                             ) : (
                                 <>
                                     {tareas?.map((tarea) => (
-                                        <Tarea
+                                        <TareaCard
+                                            key={tarea.pregunta_id}
                                             tarea={tarea}
                                             updateTareas={updateTareas}
                                             getPregunta={getPregunta}
-                                            key={tarea.id}
                                         />
                                     ))}
                                 </>
                             )}
                         </Paper>
-                        <Divider />
+                        <Divider/>
                         <Box
                             sx={{
                                 display: "flex",
@@ -1303,13 +1213,13 @@ export function NewAuditoriaPage() {
                                 color="light"
                                 aria-label="contained primary button group"
                                 fullWidth
-                                sx={{ mb: 2 }}
+                                sx={{mb: 2}}
                             >
                                 <Button
                                     type="button"
                                     alt="Cancelar"
                                     color="error"
-                                    startIcon={<CancelIcon />}
+                                    startIcon={<CancelIcon/>}
                                     onClick={handleOpenDialog}
                                 >
                                     Cancelar
@@ -1318,7 +1228,7 @@ export function NewAuditoriaPage() {
                                     type="submit"
                                     variant="contained"
                                     color="success"
-                                    endIcon={<SaveIcon />}
+                                    endIcon={<SaveIcon/>}
                                     loading={submitting}
                                     loadingPosition="end"
                                 >
@@ -1330,13 +1240,13 @@ export function NewAuditoriaPage() {
                 </Box>
             </Box>
             <Backdrop
+                open={openLoading}
                 sx={{
                     color: "white",
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
-                open={openLoading}
             >
-                <CircularProgress color="inherit" />
+                <CircularProgress color="inherit"/>
             </Backdrop>
         </>
     );

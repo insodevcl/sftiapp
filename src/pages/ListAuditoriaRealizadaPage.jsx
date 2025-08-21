@@ -1,47 +1,28 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-    Box,
-    AppBar,
-    Toolbar,
-    Paper,
-    IconButton,
-    Typography,
-} from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
-import { AuditoriaRealizadaCard } from "../components/AuditoriaRealizadaCard";
-import {
-    getStorageConfig,
-    getStorageAuditoriasRealizadas,
-} from "../functions/functions";
+import {useState, useEffect} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {Box, AppBar, Toolbar, Paper, IconButton, Typography, Skeleton} from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import {AuditoriaRealizadaCard} from '../components/AuditoriaRealizadaCard';
+import {getConfigFromStorage} from '../functions/functions';
 
 export function ListAuditoriaRealizadaPage() {
-    const storageConfig = getStorageConfig();
-    const [auditoriasRealizadas, setAuditoriasRealizadas] = useState([]);
-    const [auditoriasRealizadasOrdenadas, setAuditoriasRealizadasOrdenadas] =
-        useState([]);
+    const [auditoriasRealizada, setAuditoriasRealizada] = useState(undefined);
     const navigate = useNavigate();
+    const storageConfig = getConfigFromStorage();
 
     useEffect(() => {
-        document.title = "Auditorias realizadas";
+        document.title = 'Auditorias realizadas';
         window.scrollTo(0, 0);
-        const storageAuditoriasRealizadas = getStorageAuditoriasRealizadas(
-            storageConfig.empresaID
-        );
-        setAuditoriasRealizadas(storageAuditoriasRealizadas);
+        if (!storageConfig.userToken) return navigate('/config');
+        if (!storageConfig.empresaID) return navigate('/empresa');
+        setTimeout(() => {
+            setAuditoriasRealizada(JSON.parse(localStorage.getItem('auditoria')) || []);
+        }, 200);
     }, []);
 
-    useEffect(() => {
-        localStorage.setItem(
-            "auditorias",
-            JSON.stringify(auditoriasRealizadas)
-        );
-        setAuditoriasRealizadasOrdenadas([...auditoriasRealizadas].reverse());
-    }, [auditoriasRealizadas]);
-
     return (
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{flexGrow: 1}}>
             <AppBar position="fixed">
                 <Toolbar
                     variant="dense"
@@ -55,15 +36,11 @@ export function ListAuditoriaRealizadaPage() {
                         color="inherit"
                         aria-label="volver"
                         onClick={() => navigate(-1)}
-                        sx={{ mr: 2 }}
+                        sx={{mr: 2}}
                     >
-                        <ArrowBackIcon />
+                        <ArrowBackIcon/>
                     </IconButton>
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{ flexGrow: 1 }}
-                    >
+                    <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
                         Auditorias realizadas
                     </Typography>
                 </Toolbar>
@@ -80,33 +57,57 @@ export function ListAuditoriaRealizadaPage() {
                     backgroundColor: "background.main",
                 }}
             >
-                {auditoriasRealizadas.length === 0 ? (
+                {!auditoriasRealizada ? (
                     <Paper
                         elevation={3}
                         sx={{
-                            textAlign: "center",
+                            width: "90%",
                             p: 2,
+                            textAlign: "center",
                         }}
                     >
-                        <AssignmentTurnedInIcon sx={{ fontSize: 64 }} />
-                        <Typography variant="h6" sx={{ color: "black" }}>
-                            Aún no has realizado ninguna auditoria
-                        </Typography>
+                        <Skeleton
+                            height={60}
+                        />
+                        <Skeleton width="60%"/>
+                        <Skeleton width="40%"/>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "end",
+                                pt: 2,
+                            }}
+                        >
+                            <Skeleton
+                                variant="rounded"
+                                width="30%"
+                                height={30}
+                            />
+                        </Box>
                     </Paper>
                 ) : (
-                    <>
-                        {auditoriasRealizadasOrdenadas.map(
-                            (auditoriaRealizada) => (
-                                <AuditoriaRealizadaCard
-                                    key={auditoriaRealizada.id}
-                                    auditoriaRealizada={auditoriaRealizada}
-                                    setAuditoriasRealizadas={
-                                        setAuditoriasRealizadas
-                                    }
-                                />
-                            )
-                        )}
-                    </>
+                    auditoriasRealizada.length === 0 ? (
+                        <Paper
+                            elevation={3}
+                            sx={{
+                                textAlign: "center",
+                                p: 2,
+                            }}
+                        >
+                            <AssignmentTurnedInIcon sx={{fontSize: 64}}/>
+                            <Typography variant="h6" sx={{color: "black"}}>
+                                Aún no has realizado ninguna auditoria
+                            </Typography>
+                        </Paper>
+                    ) : (
+                        auditoriasRealizada?.reverse().map((auditoriaRealizada) => (
+                            <AuditoriaRealizadaCard
+                                key={auditoriaRealizada.id}
+                                auditoriaRealizada={auditoriaRealizada}
+                                setAuditoriasRealizada={setAuditoriasRealizada}
+                            />
+                        ))
+                    )
                 )}
             </Box>
         </Box>

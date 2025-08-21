@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { toast } from 'react-toastify'
+import {useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {useForm} from 'react-hook-form';
+import {toast} from 'react-toastify';
 import {
     Backdrop,
     CircularProgress,
@@ -14,42 +14,40 @@ import {
     Button,
     IconButton,
     Alert,
-} from "@mui/material";
-import DnsIcon from "@mui/icons-material/Dns";
-import AccountCircle from "@mui/icons-material/AccountCircle";
-import LockIcon from "@mui/icons-material/Lock";
-import LoginIcon from "@mui/icons-material/Login";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { apiServers, apiLogin } from "../functions/api";
+} from '@mui/material';
+import DnsIcon from '@mui/icons-material/Dns';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import LockIcon from '@mui/icons-material/Lock';
+import LoginIcon from '@mui/icons-material/Login';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import {getConfigFromStorage, setConfigToStorage} from '../functions/functions';
+import {apiServers, apiToken, apiUser} from '../functions/api';
 
 export function ConfigPage() {
     const [servers, setServers] = useState([]);
-    const [open, setOpen] = useState(false);
+    const [isOpenLoading, setOpenLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        formState: {errors},
     } = useForm();
 
     useEffect(() => {
-        document.title = "Configuración";
+        document.title = 'Configuración';
         const loadServer = async () => {
-            setOpen(true);
+            setOpenLoading(true);
             await apiServers()
                 .then((response) => response.json())
                 .then((data) => setServers(data))
                 .catch((error) => {
                     console.log(error);
-                    toast.error(
-                        "Error al conectar con el servidor. Por favor, intente más tarde."
-                    );
+                    toast.error('Error al conectar con el servidor. Por favor, intente más tarde.');
                 });
-            setOpen(false);
+            setOpenLoading(false);
         };
-
         loadServer();
     }, []);
 
@@ -59,28 +57,41 @@ export function ConfigPage() {
 
     const onSubmit = handleSubmit(async (data) => {
         const server = findServer(data.server);
-        await apiLogin(server.url, data.username, data.password)
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.status) {
-                    const storageconfig = localStorage.getItem("config");
-                    const configData = JSON.parse(storageconfig);
-                    configData.server = server.url;
-                    configData.loginStatus = true;
-                    configData.user = data.data.user_fullname;
-                    configData.userID = data.data.id;
-                    configData.unidades = data.data.unidades;
-                    localStorage.setItem("config", JSON.stringify(configData));
-                    return navigate("/");
-                } else {
-                    toast.error("Usuario o contraseña incorrectos");
+        await apiToken(server.url, data.username, data.password)
+            .then((response) => {
+                if (response.status === 401) {
+                    toast.error('Usuario o contraseña incorrectos');
+                    return;
                 }
+                return response.json();
             })
-            .catch((error) =>
-                toast.error(
-                    "Error al conectar con el servidor. Por favor, intente más tarde."
-                )
-            );
+            .then(async (data) => {
+                const storageConfig = getConfigFromStorage();
+                storageConfig.userID = data.user_id;
+                storageConfig.userToken = data.token;
+                storageConfig.serverUrl = server.url;
+                setConfigToStorage(storageConfig);
+                await apiUser(data.user_id)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        storageConfig.userName = data.username;
+                        storageConfig.userFullName = `${data.first_name} ${data.last_name}`;
+                        storageConfig.userEmail = data.email;
+                        storageConfig.loginStatus = true;
+                        storageConfig.unidades = data.unidades;
+                        setConfigToStorage(storageConfig);
+                        toast.success('¡Configuración guardada correctamente!');
+                        navigate('/empresa');
+                    })
+                    .catch((error) => {
+                        console.error('Error al obtener los datos del usuario:', error);
+                        toast.error('Error al obtener los datos del usuario. Por favor, intente más tarde.');
+                    });
+            })
+            .catch((error) => {
+                toast.error('Error al conectar con el servidor. Por favor, intente más tarde.');
+                console.error(error);
+            });
     });
 
     const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -95,8 +106,7 @@ export function ConfigPage() {
                 height: "100vh",
                 py: 10,
                 px: 4,
-                background:
-                    "linear-gradient(135deg, #010b02, #010b02, #59185E, #59185E)",
+                background: "linear-gradient(135deg, #010b02, #010b02, #59185E, #59185E)",
             }}
         >
             <Box
@@ -114,11 +124,19 @@ export function ConfigPage() {
                 />
             </Box>
             <form onSubmit={onSubmit}>
-                <InputLabel id="id_label_server">Servidor</InputLabel>
+                <InputLabel
+                    id="id_label_server"
+                    sx={{
+                        color: "white",
+                        mb: 1
+                    }}
+                >
+                    Servidor
+                </InputLabel>
                 <Select
                     labelId="id_label_server"
                     fullWidth
-                    defaultValue={""}
+                    defaultValue={''}
                     displayEmpty
                     renderValue={(value) => {
                         const server = findServer(value);
@@ -129,7 +147,7 @@ export function ConfigPage() {
                                     gap: 1,
                                 }}
                             >
-                                <DnsIcon />
+                                <DnsIcon/>
                                 {server ? server.url : "----------"}
                             </Box>
                         );
@@ -139,18 +157,21 @@ export function ConfigPage() {
                         background: "white",
                         color: "text.secondary",
                     }}
-                    {...register("server", { required: true })}
+                    {...register("server", {
+                        required: true
+                    })}
                 >
                     <MenuItem value="">----------</MenuItem>
                     {servers?.map((server) => (
-                        <MenuItem value={server.id} key={server.id}>
+                        <MenuItem
+                            key={server.id}
+                            value={server.id}
+                        >
                             {server.url}
                         </MenuItem>
                     ))}
                 </Select>
-                {errors.server && (
-                    <Alert severity="error">Este campo es requerido</Alert>
-                )}
+                {errors.server && <Alert severity="error">Este campo es requerido</Alert>}
                 <TextField
                     type="text"
                     fullWidth
@@ -159,7 +180,7 @@ export function ConfigPage() {
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <AccountCircle />
+                                <AccountCircle/>
                             </InputAdornment>
                         ),
                     }}
@@ -168,11 +189,11 @@ export function ConfigPage() {
                         background: "white",
                         color: "text.secondary",
                     }}
-                    {...register("username", { required: true })}
+                    {...register("username", {
+                        required: true
+                    })}
                 />
-                {errors.username && (
-                    <Alert severity="error">Este campo es requerido</Alert>
-                )}
+                {errors.username && <Alert severity="error">Este campo es requerido</Alert>}
                 <TextField
                     type={showPassword ? "text" : "password"}
                     fullWidth
@@ -181,7 +202,7 @@ export function ConfigPage() {
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <LockIcon />
+                                <LockIcon/>
                             </InputAdornment>
                         ),
                         endAdornment: (
@@ -191,11 +212,7 @@ export function ConfigPage() {
                                     onClick={handleClickShowPassword}
                                     onMouseDown={handleClickShowPassword}
                                 >
-                                    {showPassword ? (
-                                        <Visibility />
-                                    ) : (
-                                        <VisibilityOff />
-                                    )}
+                                    {showPassword ? <Visibility/> : <VisibilityOff/>}
                                 </IconButton>
                             </InputAdornment>
                         ),
@@ -205,25 +222,25 @@ export function ConfigPage() {
                         background: "white",
                         color: "text.secondary",
                     }}
-                    {...register("password", { required: true })}
+                    {...register("password", {
+                        required: true
+                    })}
                 />
-                {errors.password && (
-                    <Alert severity="error">Este campo es requerido</Alert>
-                )}
+                {errors.password && <Alert severity="error">Este campo es requerido</Alert>}
                 <Button
                     variant="contained"
                     fullWidth
-                    endIcon={<LoginIcon />}
+                    endIcon={<LoginIcon/>}
                     type="submit"
                     sx={{
                         mt: 3,
                         backgroundColor: "white",
                         color: "black",
-                        hover: {
+                        "&:hover": {
                             backgroundColor: "primary.main",
                             color: "white",
                         },
-                        active: {
+                        "&:active": {
                             backgroundColor: "primary.main",
                             color: "white",
                         },
@@ -233,13 +250,13 @@ export function ConfigPage() {
                 </Button>
             </form>
             <Backdrop
+                open={isOpenLoading}
                 sx={{
                     color: "white",
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
-                open={open}
             >
-                <CircularProgress color="inherit" />
+                <CircularProgress color="inherit"/>
             </Backdrop>
         </Box>
     );

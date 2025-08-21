@@ -1,66 +1,45 @@
-import {useEffect, useState} from "react";
-import {useNavigate} from "react-router-dom";
-import {toast} from "react-toastify";
-import {
-    Box,
-    Backdrop,
-    CircularProgress,
-    Typography,
-    Avatar,
-} from "@mui/material";
-import {apiData} from "../functions/api";
-import {getStorageConfig} from "../functions/functions";
+import {useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {toast} from 'react-toastify';
+import {Box, Backdrop, CircularProgress, Typography, Avatar} from '@mui/material';
+import {getConfigFromStorage, setConfigToStorage, formatDni, getShortCompanyName, updateData} from '../functions/functions';
 
 export function EmpresaPage() {
     const navigate = useNavigate();
-    const [open, setOpen] = useState(false);
-    const configData = getStorageConfig();
+    const [isOpenLoading, setOpenLoading] = useState(false);
+    const storageConfig = getConfigFromStorage();
 
     useEffect(() => {
-        document.title = "Seleccionar Empresa";
-        if (!configData.loginStatus) return navigate("/config");
+        document.title = 'Seleccionar empresa';
+        if (!storageConfig.userToken) return navigate('/config');
     }, []);
 
-    const loadData = async () => {
-        setOpen(true);
-        await apiData(configData.server, configData.empresaID)
-            .then((response) => response.json())
-            .then((data) => {
-                localStorage.setItem("data", JSON.stringify(data));
-                setOpen(false);
-                navigate("/");
-            })
-            .catch((error) => {
-                console.log("Error al conectar con el servidor: ", error);
-                toast.error(
-                    "Error al conectar con el servidor. Por favor, intente más tarde."
-                );
-                setOpen(false);
-            });
-    };
-
     const handleSubmit = (e) => {
-        const empresaID = e.currentTarget.getAttribute("data-id");
-        configData?.unidades?.map((unidad) => {
-            unidad.empresas?.map((empresa) => {
+        const empresaID = e.currentTarget.getAttribute('data-id');
+        storageConfig?.unidades?.map((unidad) => {
+            unidad?.empresas?.map(async (empresa) => {
                 if (empresa.id === parseInt(empresaID)) {
-                    configData.empresaID = empresa.id;
-                    configData.empresa = empresa.nombre;
+                    storageConfig.empresaID = empresa.id;
+                    storageConfig.empresa = empresa.nombre;
+                    storageConfig.empresaDni = formatDni(empresa.rut);
+                    storageConfig.empresaLogo = empresa.logo;
+                    setConfigToStorage(storageConfig);
+                    setOpenLoading(true);
+                    toast.info('Descargando datos de la empresa seleccionada, por favor espere...');
+                    const statusUpdateData = await updateData();
+                    if (statusUpdateData) {
+                        setOpenLoading(false);
+                        navigate('/');
+                    } else {
+                        toast.error('Error al cargar los datos. Por favor, intente más tarde.');
+                        setOpenLoading(false);
+                    }
                 }
                 return null;
             });
             return null;
         });
-        localStorage.setItem("config", JSON.stringify(configData));
-        loadData();
-    };
-
-    const getShortCompanyName = (name) => {
-        const words = name.toUpperCase().split(" ");
-        if (words.length > 1) {
-            return `${words[0].substring(0, 1)} ${words[1].substring(0, 1)}`;
-        }
-        return `${words[0].substring(0, 1)} ${words[0].substring(1, 2)}`;
+        return null;
     };
 
     return (
@@ -72,19 +51,13 @@ export function EmpresaPage() {
                 alignItems: "start",
                 minHeight: "100vh",
                 p: 2,
-                background:
-                    "linear-gradient(135deg, #010b02, #010b02, #59185E, #59185E)",
+                background: "linear-gradient(135deg, #010b02, #010b02, #59185E, #59185E)",
             }}
         >
-            <Typography
-                variant="h5"
-                align="center"
-                color="white"
-                sx={{mb: 2}}
-            >
+            <Typography variant="h5" align="center" color="white" sx={{mb: 2}}>
                 Seleccione la empresa con la cual trabajará
             </Typography>
-            {configData?.unidades?.map((unidad) => (
+            {storageConfig?.unidades?.map((unidad) => (
                 <Box
                     key={unidad.id}
                     sx={{
@@ -92,10 +65,7 @@ export function EmpresaPage() {
                         mb: 2,
                     }}
                 >
-                    <Typography
-                        variant="h5"
-                        sx={{color: "white"}
-                        }>
+                    <Typography variant="h5" sx={{color: "white"}}>
                         {unidad.nombre}
                     </Typography>
                     <Box
@@ -111,6 +81,7 @@ export function EmpresaPage() {
                     >
                         {unidad?.empresas?.map((empresa) => (
                             <Box
+                                key={empresa.id}
                                 sx={{
                                     display: "flex",
                                     flexDirection: "column",
@@ -147,18 +118,20 @@ export function EmpresaPage() {
                                         textAlign: "center",
                                         color: "white",
                                     }}
-                                >{empresa.nombre}</Typography>
+                                >
+                                    {empresa.nombre}
+                                </Typography>
                             </Box>
                         ))}
                     </Box>
                 </Box>
             ))}
             <Backdrop
+                open={isOpenLoading}
                 sx={{
                     color: "white",
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
-                open={open}
             >
                 <CircularProgress color="inherit"/>
             </Backdrop>
