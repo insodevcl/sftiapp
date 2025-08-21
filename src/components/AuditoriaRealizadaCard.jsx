@@ -24,12 +24,12 @@ import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import CloudSyncIcon from '@mui/icons-material/CloudSync';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {getConfigFromStorage, stringToLocalDateTime} from '../functions/functions';
+import {getConfigFromStorage, getEvaluacionFromStorage, stringToLocalDateTime} from '../functions/functions';
 import {apiAuditoriaPost} from '../functions/api';
 
 export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealizada}) {
     const storageConfig = getConfigFromStorage();
-    const [evaluacion, setEvaluacion] = useState(undefined);
+    const evaluacion = getEvaluacionFromStorage(auditoriaRealizada.evaluacion_id);
     const [isLoading, setIsLoading] = useState(true);
     const [openDialog, setOpenDialog] = useState(false);
     const [online, setOnline] = useState(navigator.onLine);
@@ -43,9 +43,6 @@ export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealiza
 
     useEffect(() => {
         setIsLoading(true);
-        const storageAuditoriasDisponible = JSON.parse(localStorage.getItem('evaluacion'));
-        const auditoriaEncontrada = storageAuditoriasDisponible.find((x) => x.id === auditoriaRealizada.evaluacion_id);
-        setEvaluacion(auditoriaEncontrada);
         window.addEventListener('online', () => setOnline(true));
         window.addEventListener('offline', () => setOnline(false));
         setIsLoading(false);
@@ -114,31 +111,31 @@ export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealiza
                 if (response.status === 200) {
                     setSync(true);
                     auditoriaRealizada.sync = true;
-                    updateSyncAuditoriaRealizada(auditoriaRealizada.id);
+                    updateSyncAuditoriaRealizada(auditoriaRealizada.uuid);
                 } else {
-                    toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${response.statusText}`);
+                    toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.uuid} ${response.statusText}`);
                 }
                 setSyncing(false);
             })
             .catch((error) => {
                 console.log(error);
-                toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${error}`);
+                toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.uuid} ${error}`);
                 setSyncing(false);
             });
     };
 
-    const updateSyncAuditoriaRealizada = (id) => {
+    const updateSyncAuditoriaRealizada = (uuid) => {
         const auditoriasRealizadas = JSON.parse(localStorage.getItem('auditoria'));
-        const index = auditoriasRealizadas.findIndex((x) => x.id === id);
+        const index = auditoriasRealizadas.findIndex((x) => x.uuid === uuid);
         auditoriasRealizadas[index].sync = true;
         localStorage.setItem('auditoria', JSON.stringify(auditoriasRealizadas));
         setAuditoriasRealizada(auditoriasRealizadas);
     };
 
-    const deleteAuditoriaRealizada = (id) => {
-        console.log(`Auditoria delete: ${id}`);
+    const deleteAuditoriaRealizada = (uuid) => {
+        console.log(`Auditoria delete: ${uuid}`);
         const auditoriasRealizadas = JSON.parse(localStorage.getItem('auditoria'));
-        const index = auditoriasRealizadas.findIndex((x) => x.id === id);
+        const index = auditoriasRealizadas.findIndex((x) => x.uuid === uuid);
         auditoriasRealizadas.splice(index, 1);
         localStorage.setItem('auditoria', JSON.stringify(auditoriasRealizadas));
         setAuditoriasRealizada(auditoriasRealizadas);
@@ -159,7 +156,8 @@ export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealiza
                     sx={{
                         position: "relative",
                         display: "inline-flex"
-                }}>
+                    }}
+                >
                     <CircularProgress
                         variant="determinate"
                         value={Math.round((value / maxValue) * 100)}
@@ -197,9 +195,6 @@ export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealiza
                         variant="caption"
                         color="black"
                         align="center"
-                        sx={{
-                            height: "40px"
-                        }}
                     >
                         {label}
                     </Typography>
@@ -261,7 +256,7 @@ export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealiza
                                 </DialogContent>
                                 <DialogActions>
                                     <Button onClick={handleCloseDialog}>Cancelar</Button>
-                                    <Button onClick={() => deleteAuditoriaRealizada(auditoriaRealizada.id)}>
+                                    <Button onClick={() => deleteAuditoriaRealizada(auditoriaRealizada.uuid)}>
                                         Continuar
                                     </Button>
                                 </DialogActions>
@@ -275,15 +270,18 @@ export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealiza
                                     overflow: "visible",
                                 }}
                             >
-                                <CardHeader title={evaluacion.nombre} sx={{py: 1}}/>
                                 <CardContent sx={{py: 1}}>
+                                    <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
+                                        <b>Fecha de realización: </b>
+                                        {stringToLocalDateTime(auditoriaRealizada.fecha)}
+                                    </Typography>
                                     <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
                                         <b>Aplicada por: </b>
                                         {auditoriaRealizada.realizador}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
-                                        <b>Fecha de realización: </b>
-                                        {stringToLocalDateTime(auditoriaRealizada.fecha)}
+                                        <b>ID: </b>
+                                        {auditoriaRealizada.uuid}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary" sx={{mb: 1}}>
                                         <b>Descripción: </b>
@@ -301,6 +299,24 @@ export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealiza
                                         <b>Subárea: </b>
                                         {auditoriaRealizada.subarea || "N/A"}
                                     </Typography>
+                                    {nRespuestasNA > 0 && (
+                                        <Alert
+                                            severity="warning"
+                                            sx={{
+                                                my: 2
+                                            }}
+                                        >
+                                            <b>Nota:</b> La auditoría contiene preguntas con la respuesta "No aplica"
+                                            ({nRespuestasNA}).
+                                            <Divider
+                                                sx={{
+                                                    my: 1,
+                                                    opacity: 0.5,
+                                                }}
+                                            />
+                                            Estas preguntas no se consideran para el cálculo de cumplimiento.
+                                        </Alert>
+                                    )}
                                     <Stack
                                         direction="row"
                                         divider={<Divider orientation="vertical" flexItem/>}
@@ -324,16 +340,10 @@ export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealiza
                                             color="error"
                                         />
                                         <CircularProgressWithLabel
-                                            label="Corección"
+                                            label="Corrección"
                                             value={nRespuestasNC}
                                             maxValue={nPreguntas - nRespuestasNA}
                                             color="warning"
-                                        />
-                                        <CircularProgressWithLabel
-                                            label="No aplica"
-                                            value={nRespuestasNA}
-                                            maxValue={nPreguntas}
-                                            color="info"
                                         />
                                     </Stack>
                                 </CardContent>
@@ -382,7 +392,7 @@ export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealiza
                                             )}
                                         </>
                                     )}
-                                    <Link to={`/auditoria/realizada/ver/${auditoriaRealizada.id}`}>
+                                    <Link to={`/auditoria/realizada/ver/${auditoriaRealizada.uuid}`}>
                                         <Button
                                             size="small"
                                             variant="contained"
@@ -411,12 +421,12 @@ export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealiza
                                 }}
                             >
                                 <Alert severity="warning">
-                                    La auditoría realizada <strong>ID: {auditoriaRealizada.id}</strong> no se encuentra
-                                    en la base de datos o esta deshabilitada
+                                    La auditoría realizada <strong>ID: {auditoriaRealizada.uuid}</strong> no se
+                                    encuentra en la base de datos o esta deshabilitada
                                     <br/>
                                     <em>
-                                        <strong>ID servidor: </strong>
-                                        {auditoriaRealizada.auditoria_id}
+                                        <strong>Servidor: </strong>
+                                        {storageConfig.serverUrl}
                                     </em>
                                 </Alert>
                             </Paper>

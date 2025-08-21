@@ -17,8 +17,8 @@ import {
 import {AuditoriaRespuesta} from '../components/AuditoriaRespuesta';
 
 export function ViewAuditoriaRealizadaPage() {
-    const {id} = useParams();
-    const auditoria = getAuditoriaFromStorage(id)
+    const {uuid} = useParams();
+    const auditoria = getAuditoriaFromStorage(uuid)
     const evaluacion = getEvaluacionFromStorage(auditoria.evaluacion_id)
     const navigate = useNavigate();
     const storageConfig = getConfigFromStorage();
@@ -96,7 +96,7 @@ export function ViewAuditoriaRealizadaPage() {
                         <ArrowBackIcon/>
                     </IconButton>
                     <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
-                        Auditoria realizada ID: {id}
+                        Auditoria realizada
                     </Typography>
                 </Toolbar>
             </AppBar>
@@ -139,28 +139,31 @@ export function ViewAuditoriaRealizadaPage() {
                             p: 2,
                         }}
                     >
-                        <Typography variant="body1" component="div">
-                            <strong>Descripción:</strong> {evaluacion.descripcion}
-                        </Typography>
-                        <Typography variant="body1" component="div">
+                        <Typography variant="body2" component="div">
                             <strong>Fecha de realización:</strong> {stringToLocalDateTime(auditoria.fecha)}
                         </Typography>
-                        <Typography variant="body1" component="div">
+                        <Typography variant="body2" component="div">
                             <strong>Aplicada por:</strong> {auditoria.realizador}
                         </Typography>
-                        <Typography variant="body1" component="div">
+                        <Typography variant="body2" component="div">
+                            <strong>ID:</strong> {auditoria.uuid}
+                        </Typography>
+                        <Typography variant="body2" component="div">
+                            <strong>Descripción:</strong> {evaluacion.descripcion}
+                        </Typography>
+                        <Typography variant="body2" component="div">
                             <strong>Tipo:</strong> {evaluacion.tipo}
                         </Typography>
-                        <Typography variant="body1" component="div">
+                        <Typography variant="body2" component="div">
                             <strong>Categoría:</strong> {evaluacion.categoria || 'No aplica'}
                         </Typography>
-                        <Typography variant="body1" component="div">
+                        <Typography variant="body2" component="div">
                             <strong>Subárea:</strong> {auditoria.subarea}
                         </Typography>
-                        <Typography variant="body1" component="div">
+                        <Typography variant="body2" component="div">
                             <strong>Aplicada a:</strong> {getAplicada()}
                         </Typography>
-                        <Typography variant="body1" component="div">
+                        <Typography variant="body2" component="div">
                             <strong>Operador:</strong> {auditoria.operador || 'No aplica'}
                         </Typography>
                     </Container>

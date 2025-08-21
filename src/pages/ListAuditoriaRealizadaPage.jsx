@@ -17,9 +17,15 @@ export function ListAuditoriaRealizadaPage() {
         if (!storageConfig.userToken) return navigate('/config');
         if (!storageConfig.empresaID) return navigate('/empresa');
         setTimeout(() => {
-            setAuditoriasRealizada(JSON.parse(localStorage.getItem('auditoria')) || []);
+            searchAuditorias();
         }, 200);
     }, []);
+
+    const searchAuditorias = () => {
+        let filteredAuditorias = JSON.parse(localStorage.getItem('auditoria')) || [];
+        filteredAuditorias = filteredAuditorias.filter(auditoria => auditoria.servidor_id === null || auditoria.servidor_id === undefined);
+        setAuditoriasRealizada(filteredAuditorias);
+    }
 
     return (
         <Box sx={{flexGrow: 1}}>
@@ -102,7 +108,7 @@ export function ListAuditoriaRealizadaPage() {
                     ) : (
                         auditoriasRealizada?.reverse().map((auditoriaRealizada) => (
                             <AuditoriaRealizadaCard
-                                key={auditoriaRealizada.id}
+                                key={auditoriaRealizada.uuid}
                                 auditoriaRealizada={auditoriaRealizada}
                                 setAuditoriasRealizada={setAuditoriasRealizada}
                             />

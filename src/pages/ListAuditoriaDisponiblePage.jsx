@@ -17,9 +17,14 @@ export function ListAuditoriaDisponiblePage() {
         if (!storageConfig.userToken) return navigate('/config');
         if (!storageConfig.empresaID) return navigate('/empresa');
         setTimeout(() => {
-            setEvaluacionesDisponible(JSON.parse(localStorage.getItem('evaluacion')) || []);
+            searchEvaluaciones();
         }, 200);
     }, []);
+
+    const searchEvaluaciones = () => {
+        let filteredEvaluaciones = JSON.parse(localStorage.getItem('evaluacion')) || [];
+        setEvaluacionesDisponible(filteredEvaluaciones);
+    };
 
     return (
         <Box sx={{flexGrow: 1}}>

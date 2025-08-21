@@ -33,10 +33,18 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import SaveIcon from '@mui/icons-material/Save';
 import {
     getContratistaFromStorage,
-    getFaenaFromStorage, getHerramientaFromStorage, getLugarFromStorage,
-    getConfigFromStorage, getSubAreaFromStorage,
-    getSucursalFromStorage, getTrabajadorFromStorage,
-    updateSyncAuditoria, getEvaluacionFromStorage, getRealizadorFromConfig, getPreguntaForEvaluacionFromStorage
+    getFaenaFromStorage,
+    getHerramientaFromStorage,
+    getLugarFromStorage,
+    getConfigFromStorage,
+    getSubAreaFromStorage,
+    getSucursalFromStorage,
+    getTrabajadorFromStorage,
+    updateSyncAuditoria,
+    getEvaluacionFromStorage,
+    getRealizadorFromConfig,
+    getPreguntaForEvaluacionFromStorage,
+    generateUUIDForAuditoria
 } from '../functions/functions';
 import {EvaluacionPregunta} from '../components/EvaluacionPregunta';
 import {TareaCard} from '../components/TareaCard';
@@ -87,6 +95,7 @@ export function NewAuditoriaPage() {
                 instalacion_id: null,
                 equipo_emergencia_id: null,
                 operador_id: null,
+                servidor_id: null
             }
         }
     );
@@ -175,7 +184,7 @@ export function NewAuditoriaPage() {
             }, 1000);
             return toast.warning('Por favor, responda todas las preguntas antes de continuar');
         }
-        data['id'] = JSON.parse(localStorage.getItem('auditoria')).length + 1;
+        data['uuid'] = generateUUIDForAuditoria();
         data['user_id'] = storageConfig.userID;
         data['fecha'] = new Date().toJSON();
         data['realizador'] = realizador.nombre;

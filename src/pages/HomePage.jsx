@@ -37,7 +37,13 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import CachedIcon from '@mui/icons-material/Cached';
 import LogoutIcon from '@mui/icons-material/Logout';
 import WavingHandIcon from '@mui/icons-material/WavingHand';
-import {initializeStorage, getConfigFromStorage, setConfigToStorage, getShortCompanyName, updateData} from '../functions/functions';
+import {
+    initializeStorage,
+    getConfigFromStorage,
+    setConfigToStorage,
+    getShortCompanyName,
+    updateData
+} from '../functions/functions';
 
 export function HomePage() {
     const [isLoading, setIsLoading] = useState(false);
@@ -400,8 +406,19 @@ export function HomePage() {
                                     borderBottomRightRadius: 4,
                                 }}
                             >
-                                <Typography variant="body1" align="center" color="white">
-                                    Auditorias realizadas
+                                <Typography
+                                    variant="body1"
+                                    align="center"
+                                    color="white"
+                                >
+                                    Auditorias
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    align="center"
+                                    color="white"
+                                >
+                                    realizadas
                                 </Typography>
                             </Container>
                         </Paper>
@@ -426,8 +443,19 @@ export function HomePage() {
                                     borderBottomRightRadius: 4,
                                 }}
                             >
-                                <Typography variant="body1" align="center" color="white">
-                                    Cuasiaccidentes realizados
+                                <Typography
+                                    variant="body1"
+                                    align="center"
+                                    color="white"
+                                >
+                                    Cuasiaccidentes
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    align="center"
+                                    color="white"
+                                >
+                                    realizados
                                 </Typography>
                             </Container>
                         </Paper>

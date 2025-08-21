@@ -95,7 +95,7 @@ function App() {
                         element={<NewAuditoriaPage />}
                     />
                     <Route
-                        path="/auditoria/realizada/ver/:id"
+                        path="/auditoria/realizada/ver/:uuid"
                         element={<ViewAuditoriaRealizadaPage />}
                     />
                 </Routes>

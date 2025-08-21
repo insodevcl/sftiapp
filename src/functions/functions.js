@@ -163,6 +163,13 @@ export const stringToLocalDateTime = (string) => {
     return date.toLocaleString().replace(',', '');
 };
 
+export const generateUUID = () => {
+    const date = new Date();
+    const timestamp = date.getTime();
+    const randomPart = Math.floor(Math.random() * 1000000);
+    return `${timestamp}-${randomPart}`;
+}
+
 export const formatDni = (dni) => {
     if (!dni) return '';
     dni = dni.toUpperCase();
@@ -337,10 +344,21 @@ export const getEvaluacionFromStorage = (id) => {
     return evaluaciones.find((x) => x.id === parseInt(id)) || null;
 }
 
-export const getAuditoriaFromStorage = (id) => {
-    if (!id) return null;
+export const getAuditoriaFromStorage = (uuid) => {
+    if (!uuid) return null;
     const auditorias = JSON.parse(localStorage.getItem('auditoria')) || [];
-    return auditorias.find((x) => x.id === parseInt(id)) || null;
+    return auditorias.find((x) => x.uuid === uuid) || null;
+}
+
+export const generateUUIDForAuditoria = () => {
+    const uuid = generateUUID();
+    const audUuid = `AUD-${uuid}`;
+    const auditorias = JSON.parse(localStorage.getItem('auditoria')) || [];
+    const existingAuditoria = auditorias.find((x) => x.id === audUuid);
+    if (existingAuditoria) {
+        return generateUUIDForAuditoria(); // Regenerate if exists
+    }
+    return audUuid;
 }
 
 export const getPreguntaForEvaluacionFromStorage = (evaluacion_id, pregunta_id) => {

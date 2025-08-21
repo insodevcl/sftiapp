@@ -2,7 +2,13 @@ import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {toast} from 'react-toastify';
 import {Box, Backdrop, CircularProgress, Typography, Avatar} from '@mui/material';
-import {getConfigFromStorage, setConfigToStorage, formatDni, getShortCompanyName, updateData} from '../functions/functions';
+import {
+    getConfigFromStorage,
+    setConfigToStorage,
+    formatDni,
+    getShortCompanyName,
+    updateData
+} from '../functions/functions';
 
 export function EmpresaPage() {
     const navigate = useNavigate();
@@ -65,7 +71,13 @@ export function EmpresaPage() {
                         mb: 2,
                     }}
                 >
-                    <Typography variant="h5" sx={{color: "white"}}>
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            color: "white",
+                            mb: 1,
+                        }}
+                    >
                         {unidad.nombre}
                     </Typography>
                     <Box
