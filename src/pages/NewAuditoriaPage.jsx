@@ -21,7 +21,6 @@ import {
     InputLabel,
     Select,
     ListSubheader,
-    Autocomplete,
     MenuItem,
     Alert,
     Divider,
@@ -514,8 +513,7 @@ export function NewAuditoriaPage() {
                     })}
                 >
                     <MenuItem value="">Seleccione un operador</MenuItem>
-                    {/*{storageData.operadores?.map((operador) => (*/}
-                    {storageData.trabajador?.map((operador) => (
+                    {storageData.trabajadores?.map((operador) => (
                         <MenuItem
                             value={operador.id}
                             key={operador.id}
