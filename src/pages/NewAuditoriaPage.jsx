@@ -142,11 +142,20 @@ export function NewAuditoriaPage() {
 
     const syncAuditoria = async (data) => {
         setOpenLoading(true);
-        await apiAuditoria(storageConfig.server, data).then((response) => {
-            if (response.status === 200) {
-                updateSyncAuditoria(data.id);
-            }
-        });
+        await apiAuditoria(storageConfig.server, data)
+            .then((response) => {
+                if (response.status === 200) {
+                    return response.json()
+                }
+            })
+            .then((data) => {
+                if (data.status) {
+                    updateSyncAuditoria(data.id);
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
         setTimeout(() => {
             setOpenLoading(false);
             return navigate("/");

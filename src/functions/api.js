@@ -16,3 +16,9 @@ export const apiAuditoria = (server, data) => {
         body: JSON.stringify(data),
     });
 };
+
+export const apiAuditoriaServer = (server, data) => {
+    return fetch(`https://${server}/api/app/auditoria/`, {
+        data: JSON.stringify(data),
+    })
+}
