@@ -29,12 +29,12 @@ import {
     getStorageData,
     stringToLocalDateTime,
 } from "../functions/functions";
-import { apiAuditoria } from "../functions/api";
+import {
+    apiAuditoria,
+    apiAuditoriaServer,
+} from "../functions/api";
 
-export function AuditoriaRealizadaCard({
-    auditoriaRealizada,
-    setAuditoriasRealizadas,
-}) {
+export function AuditoriaRealizadaCard({auditoriaRealizada, setAuditoriasRealizadas,}) {
     const storageConfig = getStorageConfig();
     const storageData = getStorageData();
     const [auditoria, setAuditoria] = useState(undefined);
@@ -79,8 +79,12 @@ export function AuditoriaRealizadaCard({
     }, [auditoria, subarea]);
 
     useEffect(() => {
-        if (!sync && online) {
-            syncAuditoria();
+        if (online) {
+            if (!sync) {
+                syncAuditoria();
+            } else {
+                checkAuditoriaRealizadaServer();
+            }
         }
     }, [online]);
 
@@ -146,29 +150,54 @@ export function AuditoriaRealizadaCard({
         apiAuditoria(storageConfig.server, auditoriaRealizada)
             .then((response) => {
                 if (response.status === 200) {
+                    return response.json()
+                } else {
+                    toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${response.statusText}`);
+                }
+            })
+            .then((data) => {
+                if (data.status) {
                     setSync(true);
                     auditoriaRealizada.sync = true;
-                    updateSyncAuditoriaRealizada(auditoriaRealizada.id);
+                    auditoriaRealizada.server_id = data.id;
+                    updateSyncAuditoriaRealizada(auditoriaRealizada.id, data.id);
                 } else {
-                    toast.error(
-                        `Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${response.statusText}`
-                    );
+                    toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${data.message}`);
                 }
                 setSyncing(false);
             })
             .catch((error) => {
                 console.log(error);
-                toast.error(
-                    `Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${error}`
-                );
+                toast.error(`Error al sincronizar auditoria ID: ${auditoriaRealizada.id} ${error}`);
                 setSyncing(false);
             });
     };
 
+    const checkAuditoriaRealizadaServer = () => {
+        apiAuditoriaServer(storageConfig.server, auditoriaRealizada)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.id) {
+                    auditoriaRealizada.server_id = data.id;
+                } else {
+                    auditoriaRealizada.sync = false;
+                    auditoriaRealizada.server_id = null;
+                    setSync(false);
+                }
+                updateSyncAuditoriaRealizada(auditoriaRealizada.id);
+            })
+            .catch((error) => {
+                console.log(error);
+                toast.error(`Error al consultar auditoria ID: ${auditoriaRealizada.id} ${error}`);
+                setSyncing(false);
+            })
+    }
+
     const updateSyncAuditoriaRealizada = (id) => {
         const realizadas = JSON.parse(localStorage.getItem("auditorias"));
         const index = realizadas.findIndex((x) => x.id === id);
-        realizadas[index].sync = true;
+        realizadas[index].sync = auditoriaRealizada.sync;
+        realizadas[index].server_id = auditoriaRealizada.server_id;
         localStorage.setItem("auditorias", JSON.stringify(realizadas));
         setAuditoriasRealizadas(realizadas);
     };

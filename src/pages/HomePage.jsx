@@ -66,6 +66,7 @@ export function HomePage() {
         document.title = "Inicio";
         initStorage();
         if (!configData.loginStatus) return navigate("/config");
+        if (!configData.server) return navigate("/config");
         if (!configData.empresaID) return navigate("/empresa");
         if (navigator.onLine) {
             loadData();

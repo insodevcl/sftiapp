@@ -17,8 +17,15 @@ export const apiAuditoria = (server, data) => {
     });
 };
 
+// Verifica si la auditoria esta en el servidor
 export const apiAuditoriaServer = (server, data) => {
-    return fetch(`https://${server}/api/app/auditoria/`, {
-        data: JSON.stringify(data),
-    })
-}
+    const baseURL = `https://${server}/api/app/auditoria/check/`;
+    const queryString = new URLSearchParams({
+        'auditoria_id': data.auditoria_id || null,
+        'fecha': data.fecha,
+    }).toString();
+    const url = `${baseURL}?${queryString}`;
+    return fetch(url, {
+        method: 'GET',
+    });
+};

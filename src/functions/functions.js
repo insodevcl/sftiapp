@@ -63,14 +63,14 @@ export const getStorageAuditoriasRealizadas = (empresaID) => {
     }
 };
 
-export const updateSyncAuditoria = (id) => {
-    debugger;
+export const updateSyncAuditoria = (local_id, server_id) => {
     const storageAuditorias = localStorage.getItem("auditorias");
     if (storageAuditorias) {
         const auditorias = JSON.parse(storageAuditorias);
-        const index = auditorias.findIndex((x) => x.id === id);
+        const index = auditorias.findIndex((x) => x.id === local_id);
         if (index !== -1) {
             auditorias[index].sync = true;
+            auditorias[index].server_id = server_id;
             localStorage.setItem("auditorias", JSON.stringify(auditorias));
         }
     }

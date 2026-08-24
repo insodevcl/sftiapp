@@ -128,6 +128,7 @@ export function NewAuditoriaPage() {
         data["respuestas"] = respuestas;
         data["tareas"] = tareas;
         data["auditoria_id"] = auditoria.id;
+        data["server_id"] = null;
         data["sync"] = false;
         const realizadas = JSON.parse(localStorage.getItem("auditorias"));
         realizadas.push(data);
@@ -146,11 +147,13 @@ export function NewAuditoriaPage() {
             .then((response) => {
                 if (response.status === 200) {
                     return response.json()
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
             })
-            .then((data) => {
-                if (data.status) {
-                    updateSyncAuditoria(data.id);
+            .then((server_data) => {
+                if (server_data.status) {
+                    updateSyncAuditoria(data.id, server_data.id);
                 }
             })
             .catch((error) => {
